@@ -1,4 +1,4 @@
-I created this to enable quick and simple remastering of my music tracks that I created on suno.com.
+I created this to enable quick and simple remastering of my music tracks that I created on suno.com. All of the remastering is done on the client side. This means none of your audio get's uploaded to anyone's servers. If you would like to check, you can see the source code in this repository. 
 
 I made this with Gemini 2.5 Pro in the Canvas feature. 
 

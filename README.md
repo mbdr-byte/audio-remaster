@@ -1,8 +1,16 @@
 # 🎧 Audio Remastering Lab
 
-[![Live Demo](/assets/preview.png)](https://remaster.mbdr.ai)
+[![Live Demo](https://img.shields.io/badge/Live_Demo-remaster.mbdr.ai-F0A500)](https://remaster.mbdr.ai)
+[![Client-Side Processing](https://img.shields.io/badge/Processing-Client_Side-22C55E)](https://github.com/mbdr-byte/audio-remaster)
+[![Made with Gemini](https://img.shields.io/badge/Made_with-Gemini_2.5_Pro-blue)](https://gemini.google.com)
 
 A browser-based tool for enhancing audio tracks with professional-grade effects.
+
+<div align="center">
+  <a href="https://remaster.mbdr.ai">
+    <img src="assets/preview.png" alt="Audio Remastering Lab Screenshot" width="600">
+  </a>
+</div>
 
 ## 🚀 Overview
 
@@ -30,4 +38,4 @@ This project was created with the assistance of Google's Gemini 2.5 Pro using th
 
 ## 🌐 Try It Out
 
-Visit [https://remaster.mbdr.ai](https://remaster.mbdr.ai) to use the Audio Remastering Lab.
+Visit [https://remaster.mbdr.ai](https://remaster.mbdr.ai) to use the Audio Remastering Lab. 

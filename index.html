@@ -4,6 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Audio Remastering Lab</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    <meta property="og:title" content="Audio Remastering Lab">
+    <meta property="og:description" content="Upload, Tweak, Compare, and Download Your Enhanced Tracks.">
+    <meta property="og:image" content="assets/preview.png">
+    <meta property="og:url" content="https://remaster.mbdr.ai">
+    <meta name="twitter:card" content="summary_large_image">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-6P5YEMZ84D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-6P5YEMZ84D');
+    </script>
+    <!-- End Google Analytics -->
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
@@ -352,6 +369,7 @@
         let audioContext;
         let originalBuffer = null;
         let isLoadingFile = false; 
+        let selectedFile = null; // Will be removed, not used in the new approach
         
         const unifiedPlayer = {
             source: null, analyser: null, mainOutputGain: null, 
@@ -393,8 +411,7 @@
         const downloadBtn = document.getElementById('downloadBtn');
         const resetControlsBtn = document.getElementById('resetControls');
         const evaluateRemasterBtn = document.getElementById('evaluateRemasterBtn');
-
-
+        
         const controls = {
             eqBass: { input: document.getElementById('eqBass'), display: document.getElementById('eqBassValue') },
             eqMids: { input: document.getElementById('eqMids'), display: document.getElementById('eqMidsValue') },
@@ -435,6 +452,10 @@
                 audioContext = new (window.AudioContext || window.webkitAudioContext)();
             } catch (e) {
                 console.error("Web Audio API is not supported in this browser.");
+                trackGAEvent('error', { 
+                    error_type: 'audio_api_not_supported',
+                    error_message: e.message
+                });
                 return;
             }
             
@@ -449,10 +470,17 @@
             unifiedPlayer.labelRemastered = document.getElementById('labelRemastered');
             
             setupEventListeners();
+            setupSliderTracking();
             updateControlDisplays(); 
             updateButtonStates();
             updateABToggleVisuals(); 
             if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+            
+            trackGAEvent('page_view', {
+                page_title: document.title,
+                page_location: window.location.href,
+                audio_context_state: audioContext.state
+            });
         };
         function drawPlaceholderSpectrum(ctx, canvas) { 
             if (!ctx || !canvas) return;
@@ -465,20 +493,78 @@
         }
 
         function setupEventListeners() {
-            audioFileButton.addEventListener('click', () => {
-                if (!isLoadingFile) { 
-                    audioFileInput.click();
+            // We'll remove the click handler for audioFileButton since we're now using the native label association
+            // The label's "for" attribute will automatically focus/click the input it's associated with
+            
+            // Just handle the file selection directly in the change event
+            audioFileInput.addEventListener('change', (event) => {
+                // Get the file from the input
+                const file = event.target.files[0];
+                
+                if (!file) {
+                    fileNameDisplay.textContent = 'No file selected.';
+                    trackGAEvent('file_operation', {
+                        operation: 'selection_cancelled'
+                    });
+                    return;
+                }
+                
+                trackGAEvent('file_operation', {
+                    operation: 'file_selected',
+                    file_type: file.type,
+                    file_size: file.size,
+                    file_name: file.name
+                });
+                
+                // Set visual feedback that we're about to process
+                fileNameDisplay.textContent = `Loading: ${file.name}...`;
+                
+                // Actually process the file - make sure audioContext is running first
+                if (audioContext.state === 'suspended') {
+                    console.log("AudioFileInput: AudioContext is suspended. Attempting to resume...");
+                    audioContext.resume().then(() => {
+                        console.log("AudioFileInput: AudioContext resumed successfully. State:", audioContext.state);
+                        processSelectedFile(file);
+                    }).catch(err => {
+                        console.error("AudioFileInput: Error resuming AudioContext:", err);
+                        fileNameDisplay.textContent = "Could not activate audio. Please try again.";
+                    });
+                } else {
+                    processSelectedFile(file);
                 }
             });
-            audioFileInput.addEventListener('change', handleFileUpload);
-            resetControlsBtn.addEventListener('click', resetAllControls);
-            downloadBtn.addEventListener('click', renderAndDownload);
-            evaluateRemasterBtn.addEventListener('click', handleEvaluateRemaster);
+
+            resetControlsBtn.addEventListener('click', () => {
+                trackGAEvent('button_click', { category: 'Controls', label: 'Reset_Controls' });
+                resetAllControls();
+            });
+            downloadBtn.addEventListener('click', () => {
+                trackGAEvent('button_click', { category: 'Export', label: 'Download_Remastered' });
+                renderAndDownload();
+            });
+            evaluateRemasterBtn.addEventListener('click', () => {
+                trackGAEvent('button_click', { category: 'Evaluation', label: 'Evaluate_Remaster' });
+                handleEvaluateRemaster();
+            });
 
 
-            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.addEventListener('click', toggleMasterPlayback);
+            if (unifiedPlayer.playPauseBtn) {
+                unifiedPlayer.playPauseBtn.addEventListener('click', () => {
+                    trackGAEvent('button_click', { category: 'Playback', label: unifiedPlayer.isPlaying ? 'Pause' : 'Play' });
+                    toggleMasterPlayback();
+                });
+            }
             if (unifiedPlayer.progressContainer) unifiedPlayer.progressContainer.addEventListener('click', seekMasterTrack);
-            if (unifiedPlayer.abToggle) unifiedPlayer.abToggle.addEventListener('change', handleABToggleChange);
+            if (unifiedPlayer.abToggle) {
+                unifiedPlayer.abToggle.addEventListener('change', () => {
+                    trackGAEvent('ab_test_toggle', { 
+                        category: 'Playback', 
+                        label: 'A/B_Test_Switch',
+                        value: unifiedPlayer.abToggle.checked ? 'Remastered_B' : 'Original_A' 
+                    });
+                    handleABToggleChange();
+                });
+            }
 
             Object.values(controls).forEach(control => {
                 if (control.input) { 
@@ -550,25 +636,34 @@
             }
         }
 
-        async function handleFileUpload(event) { 
-            if (isLoadingFile) {
-                if (event.target && event.target.files && event.target.files.length === 0) {
-                    audioFileInput.value = '';
-                }
+        function handleFailedFileLoad(fileName, error) {
+            console.error(`handleFailedFileLoad: Error ${error ? 'processing' : 'loading'} file ${fileName ? fileName : 'unknown'}:`, error);
+            originalBuffer = null; 
+            fileNameDisplay.textContent = fileName ? `Error loading ${fileName}. Try another.` : 'Error loading file. Please try another.';
+            audioFileButton.textContent = 'Choose File';
+            controlsSection.classList.add('hidden');
+            previewABSection.classList.add('hidden');
+            downloadSection.classList.add('hidden');
+            originalAnalysisDisplayWrapper.classList.add('hidden');
+            originalAnalysisDisplayWrapper.innerHTML = '';
+            remasteredAnalysisDisplayWrapper.classList.add('hidden');
+            remasteredAnalysisDisplayWrapper.innerHTML = '';
+        }
+
+        // Process a file that was just selected in the file input
+        async function processSelectedFile(file) {
+            if (isLoadingFile || !file) {
+                console.log("processSelectedFile: Already loading or no file provided");
                 return;
             }
-            isLoadingFile = true;
-            audioFileButton.disabled = true; 
-
-            const file = event.target.files[0];
-
-            if (!file) { 
-                isLoadingFile = false; 
-                audioFileButton.disabled = false;
-                audioFileInput.value = ''; 
-                return; 
-            }
             
+            console.log(`Processing file: ${file.name}`);
+            isLoadingFile = true;
+            audioFileButton.disabled = true;
+            updateButtonStates();
+            
+            // Reset UI elements
+            stopMasterPlayback(false);
             originalAnalysisDisplayWrapper.classList.add('hidden');
             originalAnalysisDisplayWrapper.innerHTML = '';
             remasteredAnalysisDisplayWrapper.classList.add('hidden');
@@ -576,37 +671,92 @@
             controlsSection.classList.add('hidden');
             previewABSection.classList.add('hidden');
             downloadSection.classList.add('hidden');
-
-            stopMasterPlayback(false); 
+            
+            if (unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `0:00 / 0:00`;
+            if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '0%';
+            if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+            
+            originalBuffer = null;
             
             try {
-                const arrayBuffer = await file.arrayBuffer();
-                originalBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                trackGAEvent('file_operation', {
+                    operation: 'processing_started',
+                    file_type: file.type,
+                    file_size: file.size
+                });
                 
+                // Read and decode the audio file
+                const arrayBuffer = await file.arrayBuffer();
+                console.log(`Decoding audio file: ${file.name}, buffer length: ${arrayBuffer.byteLength}`);
+                
+                originalBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                console.log(`Audio decoded successfully: ${file.name}, duration: ${originalBuffer.duration}`);
+                
+                if (!originalBuffer || originalBuffer.length === 0) {
+                    throw new Error("Decoded audio buffer is invalid or empty");
+                }
+                
+                // Successfully decoded - update UI
                 fileNameDisplay.textContent = `Loaded: ${file.name} (${formatTime(originalBuffer.duration)})`;
-                audioFileButton.textContent = 'Choose New File'; 
-
+                audioFileButton.textContent = 'Choose New File';
+                
+                // Show UI sections
                 controlsSection.classList.remove('hidden');
                 previewABSection.classList.remove('hidden');
                 downloadSection.classList.remove('hidden');
                 
-                analyzeAudio(originalBuffer, "originalAnalysisDisplayWrapper", "Original Audio Metrics"); 
-                resetAllControls(); 
-                unifiedPlayer.pauseOffset = 0; 
-                if (unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `0:00 / ${formatTime(originalBuffer.duration)}`;
-                if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '0%';
-                if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+                // Run audio analysis and reset controls
+                analyzeAudio(originalBuffer, "originalAnalysisDisplayWrapper", "Original Audio Metrics");
+                resetAllControls();
                 
+                // Update player for new track
+                unifiedPlayer.pauseOffset = 0;
+                if (unifiedPlayer.timeDisplay) {
+                    unifiedPlayer.timeDisplay.textContent = `0:00 / ${formatTime(originalBuffer.duration)}`;
+                }
+                
+                trackGAEvent('file_operation', {
+                    operation: 'processing_success',
+                    file_type: file.type,
+                    file_duration: originalBuffer.duration.toFixed(1),
+                    sample_rate: originalBuffer.sampleRate
+                });
             } catch (e) {
-                console.error("Error decoding audio:", e);
-                originalBuffer = null;
-                fileNameDisplay.textContent = 'No file selected.';
-                audioFileButton.textContent = 'Choose File';
+                console.error(`Error processing file ${file.name}:`, e);
+                
+                // Update UI for failure
+                handleFailedFileLoad(file.name, e);
+                
+                trackGAEvent('file_operation', {
+                    operation: 'processing_error',
+                    file_type: file.type,
+                    error_message: e.message
+                });
             } finally {
-                audioFileInput.value = ''; 
+                // CRITICAL: Clear the file input to allow re-selection of the same file
+                setTimeout(() => {
+                    // Clear after a small delay to avoid race conditions with browser event handling
+                    audioFileInput.value = '';
+                    console.log("File input cleared for future selections");
+                }, 100);
+                
                 isLoadingFile = false;
-                audioFileButton.disabled = false; 
+                audioFileButton.disabled = false;
                 updateButtonStates();
+            }
+        }
+
+        // Keep this for compatibility with other code, but it's now just a wrapper for processSelectedFile
+        async function processAudioFile(file) {
+            processSelectedFile(file);
+        }
+
+        // Original handleFileUpload function - no longer used directly, redirect to new implementation
+        async function handleFileUpload(event) {
+            // Redirect to our new implementation
+            const file = event.target.files[0];
+            if (file) {
+                processSelectedFile(file);
             }
         }
 
@@ -676,8 +826,17 @@
             let lastNodeInChain = unifiedPlayer.source;
 
             if (unifiedPlayer.isShowingRemastered) {
+                console.log("Setting up remastered audio chain");
                 const effects = createOrGetEffectNodes(contextToUse); 
                 applyRemasterSettingsToNodes(effects, contextToUse.currentTime); 
+                
+                // Debug logs for key effect values
+                console.log("Applied effect settings:", {
+                    eqBass: parseFloat(controls.eqBass.input.value),
+                    reverbMix: parseFloat(controls.reverbMix.input.value) / 100,
+                    stereoSpread: parseFloat(controls.stereoSpread.input.value) / 100,
+                    warmth: parseFloat(controls.warmth.input.value) / 100
+                });
                 
                 lastNodeInChain = lastNodeInChain.connect(effects.eqBass)
                     .connect(effects.eqMids)
@@ -691,7 +850,24 @@
                 effects.stereoSplitter.connect(effects.haasDelay, 1).connect(effects.pannerR, 0).connect(effects.stereoMerger, 0, 1);
                 lastNodeInChain = effects.stereoMerger;
                 
+                // Explicit connection to reverb system - ensure complete connections
                 lastNodeInChain.connect(effects.reverbInput);
+                
+                // The following two connections ensure the signal flow is as expected
+                effects.reverbInput.connect(effects.reverbDry);
+                effects.reverbDry.connect(effects.reverbOutput);
+                
+                effects.reverbInput.connect(effects.reverbD1);
+                effects.reverbD1.connect(effects.reverbLpf);
+                effects.reverbLpf.connect(effects.reverbD2);
+                effects.reverbD2.connect(effects.reverbFb);
+                effects.reverbFb.connect(effects.reverbD1);
+                
+                effects.reverbD1.connect(effects.reverbWetSum);
+                effects.reverbD2.connect(effects.reverbWetSum);
+                effects.reverbWetSum.connect(effects.reverbWet);
+                effects.reverbWet.connect(effects.reverbOutput);
+                
                 lastNodeInChain = effects.reverbOutput;
                 
                 const warmthInputNode = lastNodeInChain; 
@@ -738,20 +914,8 @@
                 reverbD2 = context.createDelay(0.5); reverbD2.delayTime.value = 0.073; 
                 reverbFb = context.createGain(); reverbFb.gain.value = 0.32; 
                 reverbLpf = context.createBiquadFilter(); reverbLpf.type = 'lowpass'; reverbLpf.frequency.value = 3000; 
-
-                reverbInput.connect(reverbDry).connect(reverbOutput);
-                reverbInput.connect(reverbD1);
-                reverbD1.connect(reverbLpf);
-                reverbLpf.connect(reverbD2);
-                reverbD2.connect(reverbFb);
-                reverbFb.connect(reverbD1); 
                 
-                reverbD1.connect(reverbWetSum);
-                reverbD2.connect(reverbWetSum);
-                reverbWetSum.gain.value = 0.65; 
-                reverbWetSum.connect(reverbWet); 
-
-                reverbWet.connect(reverbOutput); 
+                // We'll set up the actual connections in setupMasterAudioGraph
             }
 
             // Warmth (Saturation)
@@ -772,6 +936,7 @@
                 stereoSplitter: stereoSplitter, stereoMerger: stereoMerger,
                 haasDelay: haasDelay, pannerL: pannerL, pannerR: pannerR,
                 reverbInput: reverbInput, reverbDry: reverbDry, reverbWet: reverbWet, reverbOutput: reverbOutput,
+                reverbD1: reverbD1, reverbD2: reverbD2, reverbFb: reverbFb, reverbLpf: reverbLpf, reverbWetSum: reverbWetSum,
                 warmthDry: warmthDry, warmthInputToShaper: warmthInputToShaper, 
                 warmthShaper: warmthShaper, warmthWet: warmthWet, warmthFinalMix: warmthFinalMix
             };
@@ -782,6 +947,8 @@
 
         function applyRemasterSettingsToNodes(nodes, time = audioContext.currentTime) {
             if (!nodes || !nodes.eqBass) { return; } 
+            console.log("Applying settings to nodes at time:", time);
+            
             // EQ, Dynamics, Master Gain
             nodes.eqBass.gain.setValueAtTime(parseFloat(controls.eqBass.input.value), time);
             nodes.eqMids.gain.setValueAtTime(parseFloat(controls.eqMids.input.value), time);
@@ -804,6 +971,8 @@
 
             // Reverb Mix - Value 0-30% (slider max is 30)
             const reverbMixVal = parseFloat(controls.reverbMix.input.value) / 100; 
+            console.log(`Applying reverb mix: ${reverbMixVal} (from slider value: ${controls.reverbMix.input.value})`);
+            
             if (nodes.reverbDry && nodes.reverbWet) {
                 nodes.reverbDry.gain.setValueAtTime(1 - reverbMixVal, time);
                 nodes.reverbWet.gain.setValueAtTime(reverbMixVal, time);
@@ -887,6 +1056,7 @@
 
 
         function handleABToggleChange() { 
+            console.log(`A/B Toggle changed to: ${unifiedPlayer.abToggle.checked ? 'REMASTERED' : 'ORIGINAL'}`);
             unifiedPlayer.isShowingRemastered = unifiedPlayer.abToggle.checked;
             updateABToggleVisuals();
             if (unifiedPlayer.isPlaying) { 
@@ -1036,6 +1206,13 @@
             }
             if(unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = true; 
             downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled');
+            
+            trackGAEvent('download', {
+                operation: 'started',
+                original_duration: originalBuffer.duration.toFixed(1),
+                sample_rate: originalBuffer.sampleRate
+            });
+            
             console.log("Starting offline render...");
 
             const offlineCtx = new OfflineAudioContext(
@@ -1100,8 +1277,20 @@
                     document.body.removeChild(a);
                     console.log("Blob URL revoked and link removed.");
                 }, 100);
+                
+                trackGAEvent('download', {
+                    operation: 'completed',
+                    file_size_kb: Math.round(wavBlob.size / 1024),
+                    processing_success: true
+                });
+                
             } catch (e) {
                 console.error("Error rendering or downloading audio:", e);
+                
+                trackGAEvent('download', {
+                    operation: 'error',
+                    error_message: e.message
+                });
             } finally {
                 updateButtonStates(); 
             }
@@ -1137,6 +1326,69 @@
             return new Blob([buffer], { type: "audio/wav" });
         }
 
+        // Track slider movements with debouncing to avoid too many events
+        function setupSliderTracking() {
+            let sliderDebounceTimers = {};
+            
+            // Track slider value changes with debouncing (sends at most one event per 2 seconds per slider)
+            Object.keys(controls).forEach(controlKey => {
+                const control = controls[controlKey];
+                if (control.input) {
+                    control.input.addEventListener('input', () => {
+                        // Update UI immediately as usual
+                        if (control.display) {
+                            control.display.textContent = control.input.value;
+                        }
+                        
+                        // Clear any existing timer for this control
+                        if (sliderDebounceTimers[controlKey]) {
+                            clearTimeout(sliderDebounceTimers[controlKey]);
+                        }
+                        
+                        // Set a new timer
+                        sliderDebounceTimers[controlKey] = setTimeout(() => {
+                            trackGAEvent('slider_adjust', {
+                                control_id: controlKey,
+                                control_name: controlKey.replace(/([A-Z])/g, ' $1').toLowerCase(), // Format camelCase to spaces
+                                value: control.input.value
+                            });
+                        }, 2000); // Debounce for 2 seconds
+                    });
+                    
+                    // Also track when slider is released (mouseup/touchend)
+                    control.input.addEventListener('change', () => {
+                        trackGAEvent('slider_set', {
+                            control_id: controlKey,
+                            control_name: controlKey.replace(/([A-Z])/g, ' $1').toLowerCase(),
+                            value: control.input.value
+                        });
+                        
+                        // Clear the debounce timer as we've now sent the final value
+                        if (sliderDebounceTimers[controlKey]) {
+                            clearTimeout(sliderDebounceTimers[controlKey]);
+                            delete sliderDebounceTimers[controlKey];
+                        }
+                    });
+                }
+            });
+        }
+
+        // --- GA Event Tracking Helper ---
+        function trackGAEvent(eventName, eventParams) {
+            if (typeof gtag === 'function') {
+                gtag('event', eventName, eventParams);
+                console.log('GA Event:', eventName, eventParams); // For debugging
+            } else {
+                console.warn('gtag function not found. GA event not tracked.');
+            }
+        }
+
+    </script>
+    <footer class="text-center text-xs text-gray-500 mt-12 py-6 border-t border-gray-700">
+        <p>&copy; <span id="currentYear"></span> <a href="https://mbdr.ai" target="_blank" class="hover:text-[#f0a500] transition-colors">Megan Ben Dor Ruthven</a>. All Rights Reserved. Open Source: <a href="https://github.com/mbdr-byte/audio-remaster" target="_blank" class="hover:text-[#f0a500] transition-colors">GitHub</a></p>
+    </footer>
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
     </script>
 </body>
 </html>

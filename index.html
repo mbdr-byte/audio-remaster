@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Remastering Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'IBM Plex Mono', monospace; 
+            background-color: #1e1e1e; 
+            color: #e0e0e0; 
+        }
+        h1, .control-group h3, .control-group h4 { 
+            font-family: 'IBM Plex Mono', monospace; 
+        }
+        .control-group {
+            background-color: #2d2d2d; 
+            padding: 1.5rem 2rem; 
+            border-radius: 8px; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3), inset 0 1px 2px rgba(255,255,255,0.05);
+            margin-bottom: 2rem;
+            border: 1px solid #444;
+        }
+        .control-group h3 { /* Section titles */
+            font-size: 1.6rem; 
+            font-weight: 700; 
+            margin-bottom: 1.5rem;
+            color: #f0a500; 
+            border-bottom: 2px solid #f0a500;
+            padding-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1.5px; 
+        }
+         .control-group h4 { /* Column titles in console */
+            font-size: 1.25rem; 
+            font-weight: 700; 
+            margin-bottom: 1.25rem; 
+            color: #d5d5d5; 
+            text-align: center; 
+         }
+        label { 
+            font-size: 0.9rem; 
+            font-weight: 500;
+            color: #c5c5c5; 
+        }
+        input[type="range"] {
+            -webkit-appearance: none; appearance: none; width: 100%;
+            height: 12px; background: #1a1a1a; border-radius: 6px;
+            outline: none; margin-top: 0.5rem; border: 1px solid #444; cursor: pointer;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
+            background: #f0a500; border-radius: 4px; border: 2px solid #1e1e1e;
+            box-shadow: 0 0 5px rgba(240,165,0,0.5); cursor: grab;
+        }
+        input[type="range"]::-moz-range-thumb {
+            width: 22px; height: 22px; background: #f0a500; border-radius: 4px;
+            border: 2px solid #1e1e1e; box-shadow: 0 0 5px rgba(240,165,0,0.5); cursor: grab;
+        }
+
+        .btn {
+            padding: 0.6rem 1.2rem; border-radius: 6px; font-weight: 700;
+            transition: all 0.2s ease-in-out; cursor: pointer; display: inline-flex;
+            align-items: center; justify-content: center; font-size: 0.9rem;
+            text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid #555;
+            box-shadow: 0 2px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+        .btn-primary { background-color: #f0a500; color: #1e1e1e; border-color: #d08c00;}
+        .btn-primary:hover:not(:disabled) { background-color: #ffb733; box-shadow: 0 0 10px #f0a500, 0 2px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1); }
+        .btn-secondary { background-color: #5a5a5a; color: #e0e0e0; border-color: #404040; }
+        .btn-secondary:hover:not(:disabled) { background-color: #6b6b6b; }
+        
+        .btn-download {
+            background-color: #2d4f5a; 
+            color: #ace6f0;          
+            border-color: #407a8b;   
+        }
+        .btn-download:hover:not(:disabled) {
+            background-color: #375f6c;
+            box-shadow: 0 0 10px #ace6f0, 0 2px 3px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1);
+        }
+
+        .btn-disabled, .btn:disabled {
+            background-color: #3a3a3a !important; color: #777 !important;
+            cursor: not-allowed !important; box-shadow: none !important; border-color: #333 !important;
+        }
+        .value-display-container { display: flex; align-items: center; justify-content: flex-end; }
+        .value-display {
+            min-width: 40px; text-align: right; color: #f0a500;
+            font-size: 0.9rem; font-weight: bold;
+        }
+        .unit-display { font-size: 0.75rem; color: #aaa; margin-left: 2px; margin-right: 8px;}
+        
+        .audio-player-unified { border: 1px solid #444; padding: 1.5rem; border-radius: 8px; }
+        .progress-bar-container {
+            width: 100%; background-color: #1a1a1a; border-radius: 4px;
+            height: 12px; cursor: pointer; margin: 1rem 0; border: 1px solid #444;
+        }
+        .progress-bar { background-color: #f0a500; height: 100%; width: 0%; border-radius: 3px; }
+        .time-display { font-size: 0.8rem; color: #aaa; }
+        .visualization-canvas {
+            width: 100%; height: 120px; background-color: #1a1a1a;
+            border: 1px solid #444; border-radius: 6px; margin-top: 1rem;
+        }
+        .info-icon {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 20px; height: 20px; border-radius: 50%; background-color: #777; color: #1e1e1e;
+            font-size: 0.75rem; line-height: 20px; cursor: pointer; margin-left: 8px;
+            font-weight: bold; flex-shrink: 0; transition: background-color 0.2s;
+        }
+        .info-icon:hover { background-color: #f0a500; }
+        .info-tooltip {
+            display: none; position: absolute; background-color: #333;
+            color: #e0e0e0; padding: 0.75rem 1rem; border-radius: 6px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 0.875rem;
+            z-index: 50; width: 280px; border: 1px solid #555;
+        }
+        .slider-label-container {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 0.25rem;
+        }
+        .ab-toggle-container { display: flex; align-items: center; justify-content: center; margin-bottom: 1.5rem; }
+        .ab-toggle-label { font-size: 0.9rem; color: #ccc; margin: 0 10px; }
+        .ab-toggle-switch { position: relative; display: inline-block; width: 60px; height: 30px; }
+        .ab-toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .ab-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #444; transition: .4s; border-radius: 30px;
+        }
+        .ab-slider:before {
+            position: absolute; content: ""; height: 22px; width: 22px; left: 4px; bottom: 4px;
+            background-color: #e0e0e0; transition: .4s; border-radius: 50%;
+        }
+        input:checked + .ab-slider { background-color: #f0a500; }
+        input:checked + .ab-slider:before { transform: translateX(30px); background-color: #1e1e1e; }
+
+        .file-input-container { display: flex; align-items: center; gap: 1rem; }
+        #fileName { font-size: 0.85rem; color: #b0b0b0; flex-grow: 1; }
+        
+        .analysis-block { 
+            border: 1px solid #4a4a4a;
+            padding: 1rem;
+            border-radius: 6px;
+            background-color: #252525;
+        }
+        .analysis-block h5 { 
+            font-family: 'IBM Plex Mono', monospace; 
+            font-weight: 700; 
+            color: #f0a500;
+            font-size: 1.1rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid #555;
+            padding-bottom: 0.5rem;
+        }
+
+    </style>
+</head>
+<body class="p-4 md:p-8">
+    <div class="max-w-5xl mx-auto"> 
+        <header class="mb-10 text-center">
+            <h1 class="text-5xl font-bold text-[#f0a500] tracking-wider">AUDIO REMASTER LAB</h1>
+            <p class="text-lg text-gray-400 mt-3">Upload, Tweak, Compare, and Download Your Enhanced Tracks.</p>
+        </header>
+
+        <div class="control-group">
+            <h3>1. Load Audio File</h3>
+            <div class="file-input-container mt-2">
+                <label for="audioFile" id="audioFileButton" class="btn btn-primary">Choose File</label>
+                <input type="file" id="audioFile" accept="audio/*" class="hidden"/> 
+                <p id="fileName" class="text-sm text-gray-500">No file selected.</p>
+            </div>
+            <div id="originalAnalysisDisplayWrapper" class="mt-6 hidden"> 
+                </div>
+        </div>
+
+        <div id="previewABSection" class="control-group hidden"> 
+            <h3>2. Preview & A/B Test</h3> 
+            <div class="ab-toggle-container">
+                <span id="labelOriginal" class="ab-toggle-label font-semibold text-[#f0a500]">ORIGINAL (A)</span>
+                <label class="ab-toggle-switch">
+                    <input type="checkbox" id="abToggleSwitch">
+                    <span class="ab-slider"></span>
+                </label>
+                <span id="labelRemastered" class="ab-toggle-label text-gray-500">REMASTERED (B)</span>
+            </div>
+            <div class="audio-player-unified">
+                <div class="flex items-center justify-between">
+                    <button id="playPauseBtn" class="btn btn-primary w-28">Play</button> 
+                    <div id="currentTimeDisplay" class="time-display text-lg">0:00 / 0:00</div>
+                </div>
+                <div class="progress-bar-container" id="unifiedProgressContainer">
+                    <div id="unifiedProgressBar" class="progress-bar"></div>
+                </div>
+                <canvas id="unifiedFftCanvas" class="visualization-canvas"></canvas>
+            </div>
+        </div>
+        
+        <div id="controlsSection" class="control-group hidden"> 
+            <h3>3. Remastering Console</h3> 
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8"> 
+                <div class="space-y-6"> 
+                    <h4>Equalizer (EQ)</h4>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="eqBass">Bass (Low Shelf)</label>
+                            <div class="value-display-container">
+                                <span id="eqBassValue" class="value-display">0</span>
+                                <span class="unit-display">dB</span>
+                                <span class="info-icon" data-tooltip-target="eqBassInfoTooltip">i</span>
+                                <div id="eqBassInfoTooltip" class="info-tooltip">Controls low frequencies (e.g., kick drums, bass guitars). Positive values boost, negative values cut.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="eqBass" min="-15" max="15" value="0" step="0.1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="eqMids">Mids (Peaking)</label>
+                            <div class="value-display-container">
+                                <span id="eqMidsValue" class="value-display">0</span>
+                                <span class="unit-display">dB</span>
+                                <span class="info-icon" data-tooltip-target="eqMidsInfoTooltip">i</span>
+                                <div id="eqMidsInfoTooltip" class="info-tooltip">Controls mid-range frequencies (e.g., vocals, main body of instruments). Positive values boost, negative values cut.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="eqMids" min="-15" max="15" value="0" step="0.1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="eqTreble">Treble (High Shelf)</label>
+                            <div class="value-display-container">
+                                <span id="eqTrebleValue" class="value-display">0</span>
+                                <span class="unit-display">dB</span>
+                                <span class="info-icon" data-tooltip-target="eqTrebleInfoTooltip">i</span>
+                                <div id="eqTrebleInfoTooltip" class="info-tooltip">Controls high frequencies (e.g., cymbals, hi-hats, airiness). Positive values boost, negative values cut.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="eqTreble" min="-15" max="15" value="0" step="0.1" class="remaster-control">
+                    </div>
+                </div>
+
+                <div class="space-y-6"> 
+                    <h4>Dynamics Processor</h4>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="compressorThreshold">Compressor Threshold</label>
+                            <div class="value-display-container">
+                                <span id="compressorThresholdValue" class="value-display">-24</span>
+                                <span class="unit-display">dB</span>
+                                <span class="info-icon" data-tooltip-target="compThresholdInfoTooltip">i</span>
+                                <div id="compThresholdInfoTooltip" class="info-tooltip">The level at which the compressor starts to reduce volume. Sounds louder than this threshold will be compressed.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="compressorThreshold" min="-60" max="0" value="-24" step="1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="compressorRatio">Compressor Ratio</label>
+                            <div class="value-display-container">
+                                <span id="compressorRatioValue" class="value-display">4</span>
+                                <span class="unit-display">:1</span>
+                                <span class="info-icon" data-tooltip-target="compRatioInfoTooltip">i</span>
+                                <div id="compRatioInfoTooltip" class="info-tooltip">How much volume is reduced above the threshold. E.g., 4:1 means if input is 4dB over, output is 1dB over.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="compressorRatio" min="1" max="20" value="4" step="0.5" class="remaster-control">
+                    </div>
+                     <div>
+                        <div class="slider-label-container">
+                            <label for="limiterThreshold">Limiter Threshold</label>
+                            <div class="value-display-container">
+                                <span id="limiterThresholdValue" class="value-display">-1</span>
+                                <span class="unit-display">dBFS</span>
+                                <span class="info-icon" data-tooltip-target="limiterInfoTooltip">i</span>
+                                <div id="limiterInfoTooltip" class="info-tooltip">The absolute maximum level. Sounds attempting to exceed this will be sharply attenuated to prevent clipping.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="limiterThreshold" min="-20" max="0" value="-1" step="0.1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="gain">Master Gain</label>
+                            <div class="value-display-container">
+                                <span id="gainValue" class="value-display">0</span>
+                                <span class="unit-display">dB</span>
+                                <span class="info-icon" data-tooltip-target="gainInfoTooltip">i</span>
+                                <div id="gainInfoTooltip" class="info-tooltip">Adjusts the final output volume of the entire processed audio after other effects.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="gain" min="-12" max="12" value="0" step="0.1" class="remaster-control">
+                    </div>
+                </div>
+                
+                <div class="space-y-6">
+                    <h4>Tone & Space</h4>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="stereoSpread">Stereo Spread</label>
+                            <div class="value-display-container">
+                                <span id="stereoSpreadValue" class="value-display">0</span>
+                                <span class="unit-display">%</span>
+                                <span class="info-icon" data-tooltip-target="stereoInfoTooltip">i</span>
+                                <div id="stereoInfoTooltip" class="info-tooltip">Widens the stereo image (0-100%) by applying a slight delay (Haas effect) to one channel. 0% is no effect.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="stereoSpread" min="0" max="100" value="0" step="1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="reverbMix">Reverb Mix</label>
+                            <div class="value-display-container">
+                                <span id="reverbMixValue" class="value-display">0</span>
+                                <span class="unit-display">%</span>
+                                <span class="info-icon" data-tooltip-target="reverbInfoTooltip">i</span>
+                                <div id="reverbInfoTooltip" class="info-tooltip">Controls the amount of algorithmic reverb (0-30%). Adds a sense of space to the audio.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="reverbMix" min="0" max="30" value="0" step="1" class="remaster-control">
+                    </div>
+                    <div>
+                        <div class="slider-label-container">
+                            <label for="warmth">Warmth</label>
+                            <div class="value-display-container">
+                                <span id="warmthValue" class="value-display">0</span>
+                                <span class="unit-display">%</span>
+                                <span class="info-icon" data-tooltip-target="warmthInfoTooltip">i</span>
+                                <div id="warmthInfoTooltip" class="info-tooltip">Mixes in subtle harmonic saturation for an analog-like warmth and character.</div>
+                            </div>
+                        </div>
+                        <input type="range" id="warmth" min="0" max="100" value="0" step="1" class="remaster-control">
+                    </div>
+                </div>
+            </div>
+             <div class="mt-10 text-center space-x-4"> 
+                <button id="evaluateRemasterBtn" class="btn btn-secondary btn-lg">Evaluate Remaster</button>
+                <button id="resetControls" class="btn btn-secondary btn-lg">Reset Controls</button>
+            </div>
+            <div id="remasteredAnalysisDisplayWrapper" class="mt-6 hidden"> 
+                </div>
+        </div>
+
+        <div id="downloadSection" class="control-group hidden">
+            <h3>4. Export Master</h3> <div class="text-center">
+                <button id="downloadBtn" class="btn btn-download btn-lg">Download Remastered (WAV)</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Global Variables ---
+        let audioContext;
+        let originalBuffer = null;
+        let isLoadingFile = false; 
+        
+        const unifiedPlayer = {
+            source: null, analyser: null, mainOutputGain: null, 
+            isPlaying: false, startTime: 0, pauseOffset: 0, animationFrameId: null,
+            isShowingRemastered: false, 
+            playPauseBtn: null, progressBar: null, progressContainer: null, timeDisplay: null,
+            fftCanvas: null, fftCanvasCtx: null,
+            abToggle: null, labelOriginal: null, labelRemastered: null
+        };
+
+        // Effect Nodes
+        let masterGainNode, limiterNode, compressorNode; 
+        let eqBassNode, eqMidsNode, eqTrebleNode;
+        
+        let stereoSplitter, stereoMerger, haasDelay, pannerL, pannerR;
+        let reverbInput, reverbDry, reverbWet, reverbOutput, reverbWetSum; 
+        let reverbD1, reverbD2, reverbFb, reverbLpf;
+        let warmthDry, warmthWet, warmthShaper, warmthInputToShaper, warmthFinalMix;
+
+
+        const defaultSettings = {
+            eqBass: 0, eqMids: 0, eqTreble: 0,
+            compressorThreshold: -24, compressorRatio: 4,
+            limiterThreshold: -1, gain: 0,
+            stereoSpread: 0, reverbMix: 0, warmth: 0, 
+        };
+
+        // --- DOM Elements ---
+        const audioFileInput = document.getElementById('audioFile');
+        const audioFileButton = document.getElementById('audioFileButton');
+        const fileNameDisplay = document.getElementById('fileName');
+        const originalAnalysisDisplayWrapper = document.getElementById('originalAnalysisDisplayWrapper');
+        const remasteredAnalysisDisplayWrapper = document.getElementById('remasteredAnalysisDisplayWrapper');
+
+        const controlsSection = document.getElementById('controlsSection');
+        const previewABSection = document.getElementById('previewABSection'); 
+        const downloadSection = document.getElementById('downloadSection');
+        
+        const downloadBtn = document.getElementById('downloadBtn');
+        const resetControlsBtn = document.getElementById('resetControls');
+        const evaluateRemasterBtn = document.getElementById('evaluateRemasterBtn');
+
+
+        const controls = {
+            eqBass: { input: document.getElementById('eqBass'), display: document.getElementById('eqBassValue') },
+            eqMids: { input: document.getElementById('eqMids'), display: document.getElementById('eqMidsValue') },
+            eqTreble: { input: document.getElementById('eqTreble'), display: document.getElementById('eqTrebleValue') },
+            compressorThreshold: { input: document.getElementById('compressorThreshold'), display: document.getElementById('compressorThresholdValue') },
+            compressorRatio: { input: document.getElementById('compressorRatio'), display: document.getElementById('compressorRatioValue') },
+            limiterThreshold: { input: document.getElementById('limiterThreshold'), display: document.getElementById('limiterThresholdValue') },
+            gain: { input: document.getElementById('gain'), display: document.getElementById('gainValue') },
+            stereoSpread: { input: document.getElementById('stereoSpread'), display: document.getElementById('stereoSpreadValue')},
+            reverbMix: { input: document.getElementById('reverbMix'), display: document.getElementById('reverbMixValue')},
+            warmth: { input: document.getElementById('warmth'), display: document.getElementById('warmthValue')},
+        };
+
+        function formatTime(seconds) { 
+            const min = Math.floor(seconds / 60);
+            const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
+            return `${min}:${sec}`;
+        }
+        function updateButtonStates() { 
+            const isFileLoaded = originalBuffer !== null;
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = !isFileLoaded;
+            downloadBtn.disabled = !isFileLoaded;
+            resetControlsBtn.disabled = !isFileLoaded;
+            evaluateRemasterBtn.disabled = !isFileLoaded;
+            if (unifiedPlayer.abToggle) unifiedPlayer.abToggle.disabled = !isFileLoaded;
+
+            [unifiedPlayer.playPauseBtn, downloadBtn, resetControlsBtn, evaluateRemasterBtn, audioFileButton].forEach(btn => {
+                if (btn) { 
+                    if (btn.disabled) btn.classList.add('btn-disabled');
+                    else btn.classList.remove('btn-disabled');
+                }
+            });
+        }
+
+        // --- Initialization ---
+        window.onload = () => { 
+            try {
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            } catch (e) {
+                console.error("Web Audio API is not supported in this browser.");
+                return;
+            }
+            
+            unifiedPlayer.playPauseBtn = document.getElementById('playPauseBtn');
+            unifiedPlayer.progressBar = document.getElementById('unifiedProgressBar');
+            unifiedPlayer.progressContainer = document.getElementById('unifiedProgressContainer');
+            unifiedPlayer.timeDisplay = document.getElementById('currentTimeDisplay');
+            unifiedPlayer.fftCanvas = document.getElementById('unifiedFftCanvas');
+            if (unifiedPlayer.fftCanvas) unifiedPlayer.fftCanvasCtx = unifiedPlayer.fftCanvas.getContext('2d');
+            unifiedPlayer.abToggle = document.getElementById('abToggleSwitch');
+            unifiedPlayer.labelOriginal = document.getElementById('labelOriginal');
+            unifiedPlayer.labelRemastered = document.getElementById('labelRemastered');
+            
+            setupEventListeners();
+            updateControlDisplays(); 
+            updateButtonStates();
+            updateABToggleVisuals(); 
+            if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+        };
+        function drawPlaceholderSpectrum(ctx, canvas) { 
+            if (!ctx || !canvas) return;
+            ctx.fillStyle = '#1a1a1a'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#555'; 
+            ctx.font = "14px 'IBM Plex Mono'";
+            ctx.textAlign = 'center';
+            ctx.fillText('Spectrum Analyzer', canvas.width / 2, canvas.height / 2);
+        }
+
+        function setupEventListeners() {
+            audioFileButton.addEventListener('click', () => {
+                if (!isLoadingFile) { 
+                    audioFileInput.click();
+                }
+            });
+            audioFileInput.addEventListener('change', handleFileUpload);
+            resetControlsBtn.addEventListener('click', resetAllControls);
+            downloadBtn.addEventListener('click', renderAndDownload);
+            evaluateRemasterBtn.addEventListener('click', handleEvaluateRemaster);
+
+
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.addEventListener('click', toggleMasterPlayback);
+            if (unifiedPlayer.progressContainer) unifiedPlayer.progressContainer.addEventListener('click', seekMasterTrack);
+            if (unifiedPlayer.abToggle) unifiedPlayer.abToggle.addEventListener('change', handleABToggleChange);
+
+            Object.values(controls).forEach(control => {
+                if (control.input) { 
+                    control.input.addEventListener('input', () => {
+                        updateControlDisplays();
+                        if (unifiedPlayer.isShowingRemastered && unifiedPlayer.isPlaying) {
+                            applyRemasterSettingsToNodes(getLiveEffectNodes());
+                        }
+                    });
+                }
+            });
+            document.querySelectorAll('.info-icon').forEach(icon => { 
+                 const tooltipId = icon.dataset.tooltipTarget;
+                const tooltip = document.getElementById(tooltipId);
+                if (tooltip) {
+                    icon.addEventListener('mouseenter', (e) => {
+                        const iconRect = icon.getBoundingClientRect();
+                        tooltip.style.display = 'block';
+                        let top = iconRect.bottom + window.scrollY + 8;
+                        let left = iconRect.left + window.scrollX - (tooltip.offsetWidth / 2) + (iconRect.width / 2);
+                        if (left < 5) left = 5;
+                        if (left + tooltip.offsetWidth > window.innerWidth) left = window.innerWidth - tooltip.offsetWidth - 5;
+                        if (top + tooltip.offsetHeight > window.innerHeight + window.scrollY) {
+                           top = iconRect.top + window.scrollY - tooltip.offsetHeight - 8;
+                        }
+                        tooltip.style.top = `${top}px`; tooltip.style.left = `${left}px`;
+                    });
+                    icon.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
+                }
+            });
+        }
+        
+        function resetAllControls() { 
+            if (!originalBuffer) return;
+            Object.keys(defaultSettings).forEach(key => {
+                if (controls[key] && controls[key].input) {
+                    controls[key].input.value = defaultSettings[key];
+                }
+            });
+            updateControlDisplays();
+            if (unifiedPlayer.isShowingRemastered && unifiedPlayer.isPlaying) {
+                 applyRemasterSettingsToNodes(getLiveEffectNodes());
+            }
+            if (unifiedPlayer.isShowingRemastered && unifiedPlayer.fftCanvasCtx) {
+                drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+            }
+            remasteredAnalysisDisplayWrapper.innerHTML = '';
+            remasteredAnalysisDisplayWrapper.classList.add('hidden');
+        }
+        function updateControlDisplays() { 
+            Object.keys(controls).forEach(key => {
+                 if (controls[key] && controls[key].input && controls[key].display) {
+                    controls[key].display.textContent = controls[key].input.value;
+                 }
+            });
+        }
+        function updateABToggleVisuals() { 
+            if (!unifiedPlayer.labelOriginal || !unifiedPlayer.labelRemastered) return;
+            if (unifiedPlayer.isShowingRemastered) {
+                unifiedPlayer.labelOriginal.classList.remove('font-semibold', 'text-[#f0a500]');
+                unifiedPlayer.labelOriginal.classList.add('text-gray-500');
+                unifiedPlayer.labelRemastered.classList.add('font-semibold', 'text-[#f0a500]');
+                unifiedPlayer.labelRemastered.classList.remove('text-gray-500');
+            } else {
+                unifiedPlayer.labelOriginal.classList.add('font-semibold', 'text-[#f0a500]');
+                unifiedPlayer.labelOriginal.classList.remove('text-gray-500');
+                unifiedPlayer.labelRemastered.classList.remove('font-semibold', 'text-[#f0a500]');
+                unifiedPlayer.labelRemastered.classList.add('text-gray-500');
+            }
+        }
+
+        async function handleFileUpload(event) { 
+            if (isLoadingFile) {
+                if (event.target && event.target.files && event.target.files.length === 0) {
+                    audioFileInput.value = '';
+                }
+                return;
+            }
+            isLoadingFile = true;
+            audioFileButton.disabled = true; 
+
+            const file = event.target.files[0];
+
+            if (!file) { 
+                isLoadingFile = false; 
+                audioFileButton.disabled = false;
+                audioFileInput.value = ''; 
+                return; 
+            }
+            
+            originalAnalysisDisplayWrapper.classList.add('hidden');
+            originalAnalysisDisplayWrapper.innerHTML = '';
+            remasteredAnalysisDisplayWrapper.classList.add('hidden');
+            remasteredAnalysisDisplayWrapper.innerHTML = '';
+            controlsSection.classList.add('hidden');
+            previewABSection.classList.add('hidden');
+            downloadSection.classList.add('hidden');
+
+            stopMasterPlayback(false); 
+            
+            try {
+                const arrayBuffer = await file.arrayBuffer();
+                originalBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                fileNameDisplay.textContent = `Loaded: ${file.name} (${formatTime(originalBuffer.duration)})`;
+                audioFileButton.textContent = 'Choose New File'; 
+
+                controlsSection.classList.remove('hidden');
+                previewABSection.classList.remove('hidden');
+                downloadSection.classList.remove('hidden');
+                
+                analyzeAudio(originalBuffer, "originalAnalysisDisplayWrapper", "Original Audio Metrics"); 
+                resetAllControls(); 
+                unifiedPlayer.pauseOffset = 0; 
+                if (unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `0:00 / ${formatTime(originalBuffer.duration)}`;
+                if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '0%';
+                if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+                
+            } catch (e) {
+                console.error("Error decoding audio:", e);
+                originalBuffer = null;
+                fileNameDisplay.textContent = 'No file selected.';
+                audioFileButton.textContent = 'Choose File';
+            } finally {
+                audioFileInput.value = ''; 
+                isLoadingFile = false;
+                audioFileButton.disabled = false; 
+                updateButtonStates();
+            }
+        }
+
+        function analyzeAudio(buffer, targetElementId, analysisBlockTitle) { 
+            const targetElement = document.getElementById(targetElementId);
+            if (!targetElement) return;
+
+            const data = buffer.getChannelData(0); 
+            let peak = 0; let sumOfSquares = 0;
+            for (let i = 0; i < data.length; i++) {
+                const absSample = Math.abs(data[i]);
+                if (absSample > peak) peak = absSample;
+                sumOfSquares += data[i] * data[i];
+            }
+            const rms = Math.sqrt(sumOfSquares / data.length);
+            const peakDb = peak > 0 ? 20 * Math.log10(peak) : -Infinity;
+            const rmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
+
+            let suggestionsHtml = '<ul class="list-disc list-inside space-y-1 text-gray-400">';
+            if (peakDb > -1.0) suggestionsHtml += '<li><span class="font-semibold text-yellow-400">High Peaks:</span> Audio peaks are very high (near 0 dBFS). Consider using the Limiter or reducing Gain to prevent clipping.</li>';
+            else if (peakDb < -12.0) suggestionsHtml += '<li><span class="font-semibold text-blue-400">Low Peak Level:</span> Overall peak level is low. Consider increasing Master Gain.</li>';
+            
+            if (rmsDb < -24.0) suggestionsHtml += '<li><span class="font-semibold text-blue-400">Low Average Loudness (RMS):</span> Audio sounds quiet. Consider increasing Master Gain or using the Compressor for a fuller sound.</li>';
+            else if (rmsDb > -10.0 && peakDb < -1.0) suggestionsHtml += '<li><span class="font-semibold text-yellow-400">High Average Loudness (RMS):</span> Audio has limited dynamic variation. If it sounds "squashed," consider less compression or limiting.</li>';
+            
+            const dynamicRange = (peakDb === -Infinity || rmsDb === -Infinity) ? 0 : peakDb - rmsDb;
+            if (dynamicRange < 8 && peakDb < -3.0) suggestionsHtml += '<li><span class="font-semibold text-blue-400">Low Dynamic Range:</span> Audio has minimal loudness variation. If it lacks punch, consider reducing compression or using less limiting.</li>';
+            else if (dynamicRange > 18) suggestionsHtml += '<li><span class="font-semibold text-blue-400">Wide Dynamic Range:</span> Audio has significant loudness variation. Consider a gentle compressor to even out levels if desired.</li>';
+            
+            if (suggestionsHtml === '<ul class="list-disc list-inside space-y-1 text-gray-400">') suggestionsHtml += '<li><span class="font-semibold text-green-400">Balanced Audio:</span> Audio metrics appear balanced. Fine-tune effects to taste!</li>';
+            suggestionsHtml += '</ul>';
+            
+            targetElement.innerHTML = `
+                <div class="analysis-block">
+                    <h5>${analysisBlockTitle}</h5>
+                    <div class="text-sm text-gray-300 space-y-2 mt-2">
+                        <p><strong>Peak Level:</strong> <span class="text-amber-400">${peakDb.toFixed(2)} dBFS</span></p>
+                        <p><strong>RMS Level (Avg. Loudness):</strong> <span class="text-amber-400">${rmsDb.toFixed(2)} dBFS</span></p>
+                        <p><strong>Approx. Dynamic Range:</strong> <span class="text-amber-400">${dynamicRange.toFixed(2)} dB</span></p>
+                        <h6 class="font-['Roboto_Mono'] font-semibold mt-3 mb-1 text-gray-300">Suggestions:</h6>
+                        ${suggestionsHtml}
+                    </div>
+                </div>`;
+            targetElement.classList.remove('hidden');
+        }
+
+
+        function setupMasterAudioGraph(contextToUse = audioContext) {
+            if (unifiedPlayer.source) { 
+                unifiedPlayer.source.onended = null;
+                try { unifiedPlayer.source.stop(); } catch (e) { /* already stopped */ }
+                unifiedPlayer.source.disconnect();
+            }
+
+            unifiedPlayer.source = contextToUse.createBufferSource();
+            unifiedPlayer.source.buffer = originalBuffer;
+
+            if (!unifiedPlayer.analyser || unifiedPlayer.analyser.context !== contextToUse) {
+                unifiedPlayer.analyser = contextToUse.createAnalyser();
+                unifiedPlayer.analyser.fftSize = 2048;
+            }
+            if (!unifiedPlayer.mainOutputGain || unifiedPlayer.mainOutputGain.context !== contextToUse) {
+                unifiedPlayer.mainOutputGain = contextToUse.createGain();
+                unifiedPlayer.mainOutputGain.connect(contextToUse.destination);
+            }
+            
+            let lastNodeInChain = unifiedPlayer.source;
+
+            if (unifiedPlayer.isShowingRemastered) {
+                const effects = createOrGetEffectNodes(contextToUse); 
+                applyRemasterSettingsToNodes(effects, contextToUse.currentTime); 
+                
+                lastNodeInChain = lastNodeInChain.connect(effects.eqBass)
+                    .connect(effects.eqMids)
+                    .connect(effects.eqTreble);
+                
+                lastNodeInChain = lastNodeInChain.connect(effects.compressor)
+                    .connect(effects.limiter);
+
+                lastNodeInChain.connect(effects.stereoSplitter);
+                effects.stereoSplitter.connect(effects.pannerL, 0).connect(effects.stereoMerger, 0, 0); 
+                effects.stereoSplitter.connect(effects.haasDelay, 1).connect(effects.pannerR, 0).connect(effects.stereoMerger, 0, 1);
+                lastNodeInChain = effects.stereoMerger;
+                
+                lastNodeInChain.connect(effects.reverbInput);
+                lastNodeInChain = effects.reverbOutput;
+                
+                const warmthInputNode = lastNodeInChain; 
+                warmthInputNode.connect(effects.warmthDry); 
+                warmthInputNode.connect(effects.warmthInputToShaper); 
+                lastNodeInChain = effects.warmthFinalMix; 
+
+                lastNodeInChain = lastNodeInChain.connect(effects.masterGain);
+            }
+            lastNodeInChain.connect(unifiedPlayer.analyser);
+            unifiedPlayer.analyser.connect(unifiedPlayer.mainOutputGain);
+            unifiedPlayer.source.onended = handleMasterPlaybackEnd;
+        }
+        
+        function createOrGetEffectNodes(context) {
+            // EQ, Compressor, Limiter, MasterGain (from controls)
+            if (!eqBassNode || eqBassNode.context !== context) { 
+                eqBassNode = context.createBiquadFilter(); eqBassNode.type = 'lowshelf'; eqBassNode.frequency.value = 250;
+                eqMidsNode = context.createBiquadFilter(); eqMidsNode.type = 'peaking'; eqMidsNode.frequency.value = 1000; eqMidsNode.Q.value = 1;
+                eqTrebleNode = context.createBiquadFilter(); eqTrebleNode.type = 'highshelf'; eqTrebleNode.frequency.value = 4000;
+                compressorNode = context.createDynamicsCompressor();
+                limiterNode = context.createDynamicsCompressor();
+                masterGainNode = context.createGain(); 
+            }
+
+            // Stereo Spread (Haas Effect)
+            if (!stereoSplitter || stereoSplitter.context !== context) {
+                stereoSplitter = context.createChannelSplitter(2);
+                stereoMerger = context.createChannelMerger(2);
+                pannerL = context.createStereoPanner(); pannerL.pan.value = -1; 
+                pannerR = context.createStereoPanner(); pannerR.pan.value = 1; 
+                haasDelay = context.createDelay(0.1); haasDelay.delayTime.value = 0;
+            }
+            
+            // Reverb (Simple Algorithmic)
+            if (!reverbInput || reverbInput.context !== context) {
+                reverbInput = context.createGain(); 
+                reverbDry = context.createGain();
+                reverbWet = context.createGain();
+                reverbOutput = context.createGain(); 
+                reverbWetSum = context.createGain(); 
+
+                reverbD1 = context.createDelay(0.5); reverbD1.delayTime.value = 0.047; 
+                reverbD2 = context.createDelay(0.5); reverbD2.delayTime.value = 0.073; 
+                reverbFb = context.createGain(); reverbFb.gain.value = 0.32; 
+                reverbLpf = context.createBiquadFilter(); reverbLpf.type = 'lowpass'; reverbLpf.frequency.value = 3000; 
+
+                reverbInput.connect(reverbDry).connect(reverbOutput);
+                reverbInput.connect(reverbD1);
+                reverbD1.connect(reverbLpf);
+                reverbLpf.connect(reverbD2);
+                reverbD2.connect(reverbFb);
+                reverbFb.connect(reverbD1); 
+                
+                reverbD1.connect(reverbWetSum);
+                reverbD2.connect(reverbWetSum);
+                reverbWetSum.gain.value = 0.65; 
+                reverbWetSum.connect(reverbWet); 
+
+                reverbWet.connect(reverbOutput); 
+            }
+
+            // Warmth (Saturation)
+            if(!warmthShaper || warmthShaper.context !== context) {
+                warmthDry = context.createGain();
+                warmthInputToShaper = context.createGain(); 
+                warmthShaper = context.createWaveShaper();
+                warmthWet = context.createGain(); 
+                warmthFinalMix = context.createGain(); 
+
+                warmthInputToShaper.connect(warmthShaper).connect(warmthWet).connect(warmthFinalMix);
+                warmthDry.connect(warmthFinalMix);
+            }
+
+            return { 
+                eqBass: eqBassNode, eqMids: eqMidsNode, eqTreble: eqTrebleNode, 
+                compressor: compressorNode, limiter: limiterNode, masterGain: masterGainNode,
+                stereoSplitter: stereoSplitter, stereoMerger: stereoMerger,
+                haasDelay: haasDelay, pannerL: pannerL, pannerR: pannerR,
+                reverbInput: reverbInput, reverbDry: reverbDry, reverbWet: reverbWet, reverbOutput: reverbOutput,
+                warmthDry: warmthDry, warmthInputToShaper: warmthInputToShaper, 
+                warmthShaper: warmthShaper, warmthWet: warmthWet, warmthFinalMix: warmthFinalMix
+            };
+        }
+
+
+        function getLiveEffectNodes() { return createOrGetEffectNodes(audioContext); }
+
+        function applyRemasterSettingsToNodes(nodes, time = audioContext.currentTime) {
+            if (!nodes || !nodes.eqBass) { return; } 
+            // EQ, Dynamics, Master Gain
+            nodes.eqBass.gain.setValueAtTime(parseFloat(controls.eqBass.input.value), time);
+            nodes.eqMids.gain.setValueAtTime(parseFloat(controls.eqMids.input.value), time);
+            nodes.eqTreble.gain.setValueAtTime(parseFloat(controls.eqTreble.input.value), time);
+            nodes.compressor.threshold.setValueAtTime(parseFloat(controls.compressorThreshold.input.value), time);
+            nodes.compressor.ratio.setValueAtTime(parseFloat(controls.compressorRatio.input.value), time);
+            nodes.compressor.attack.setValueAtTime(0.003, time); nodes.compressor.release.setValueAtTime(0.25, time); nodes.compressor.knee.setValueAtTime(6, time);
+            nodes.limiter.threshold.setValueAtTime(parseFloat(controls.limiterThreshold.input.value), time);
+            nodes.limiter.knee.setValueAtTime(0, time); nodes.limiter.ratio.setValueAtTime(20, time);
+            nodes.limiter.attack.setValueAtTime(0.001, time); nodes.limiter.release.setValueAtTime(0.05, time);
+            const gainValueDb = parseFloat(controls.gain.input.value);
+            nodes.masterGain.gain.setValueAtTime(Math.pow(10, gainValueDb / 20), time); 
+
+            // Stereo Spread (Haas effect) - Value 0-100%
+            const spreadPercent = parseFloat(controls.stereoSpread.input.value);
+            const maxHaasDelay = 0.02; 
+            if (nodes.haasDelay) {
+                nodes.haasDelay.delayTime.setValueAtTime( (spreadPercent / 100) * maxHaasDelay, time);
+            }
+
+            // Reverb Mix - Value 0-30% (slider max is 30)
+            const reverbMixVal = parseFloat(controls.reverbMix.input.value) / 100; 
+            if (nodes.reverbDry && nodes.reverbWet) {
+                nodes.reverbDry.gain.setValueAtTime(1 - reverbMixVal, time);
+                nodes.reverbWet.gain.setValueAtTime(reverbMixVal, time);
+            }
+            
+            // Warmth (Saturation) - Value 0-100%
+            const warmthPercent = parseFloat(controls.warmth.input.value);
+            if (nodes.warmthShaper && nodes.warmthDry && nodes.warmthWet && nodes.warmthInputToShaper) {
+                const curveIntensity = warmthPercent / 50; // k for tanh goes from 0 to 2
+                nodes.warmthShaper.curve = makeDistortionCurve(curveIntensity); 
+                nodes.warmthShaper.oversample = '2x';
+                
+                const wetGainValue = warmthPercent / 100; 
+                const dryGainValue = 1 - wetGainValue;
+                
+                nodes.warmthDry.gain.setValueAtTime(dryGainValue, time);
+                nodes.warmthInputToShaper.gain.setValueAtTime(1.0, time); 
+                nodes.warmthWet.gain.setValueAtTime(wetGainValue, time);
+            }
+        }
+        
+        function makeDistortionCurve(amount) {
+            const k = Math.max(0.01, amount); 
+            const n_samples = 2048;
+            const curve = new Float32Array(n_samples);
+            for (let i = 0; i < n_samples; ++i) {
+                const x = i * 2 / n_samples - 1; 
+                curve[i] = Math.tanh(k * x);
+            }
+            return curve;
+        }
+
+        async function handleEvaluateRemaster() {
+            if (!originalBuffer) {
+                return;
+            }
+            evaluateRemasterBtn.disabled = true;
+            remasteredAnalysisDisplayWrapper.classList.add('hidden'); 
+            remasteredAnalysisDisplayWrapper.innerHTML = '';
+
+
+            const offlineCtx = new OfflineAudioContext(
+                originalBuffer.numberOfChannels,
+                originalBuffer.length,
+                originalBuffer.sampleRate
+            );
+            const offlineSource = offlineCtx.createBufferSource();
+            offlineSource.buffer = originalBuffer;
+            const offlineEffects = createOrGetEffectNodes(offlineCtx);
+            applyRemasterSettingsToNodes(offlineEffects, 0); 
+
+            let lastOfflineNode = offlineSource;
+            lastOfflineNode = lastOfflineNode.connect(offlineEffects.eqBass)
+                .connect(offlineEffects.eqMids)
+                .connect(offlineEffects.eqTreble);
+            lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
+                .connect(offlineEffects.limiter);
+            lastOfflineNode.connect(offlineEffects.stereoSplitter);
+            offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
+            offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
+            lastOfflineNode = offlineEffects.stereoMerger;
+            lastOfflineNode.connect(offlineEffects.reverbInput);
+            lastOfflineNode = offlineEffects.reverbOutput;
+            const warmthInputSplitterOffline = lastOfflineNode;
+            warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);
+            warmthInputSplitterOffline.connect(offlineEffects.warmthDry);
+            lastOfflineNode = offlineEffects.warmthFinalMix;
+            lastOfflineNode.connect(offlineEffects.masterGain).connect(offlineCtx.destination);
+            
+            offlineSource.start(0);
+
+            try {
+                const renderedBuffer = await offlineCtx.startRendering();
+                analyzeAudio(renderedBuffer, "remasteredAnalysisDisplayWrapper", "Remastered Audio Metrics"); 
+            } catch (e) {
+                console.error("Error evaluating remastered audio:", e);
+            } finally {
+                evaluateRemasterBtn.disabled = false;
+            }
+        }
+
+
+        function handleABToggleChange() { 
+            unifiedPlayer.isShowingRemastered = unifiedPlayer.abToggle.checked;
+            updateABToggleVisuals();
+            if (unifiedPlayer.isPlaying) { 
+                const currentPlayTime = unifiedPlayer.pauseOffset + (audioContext.currentTime - unifiedPlayer.startTime);
+                stopMasterPlayback(true); 
+                unifiedPlayer.pauseOffset = currentPlayTime; 
+                startMasterPlayback(); 
+            } else {
+                if (originalBuffer && unifiedPlayer.fftCanvasCtx) {
+                     drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas); 
+                }
+            }
+        }
+        function startMasterPlayback() { 
+            if (!originalBuffer) return;
+            setupMasterAudioGraph(); 
+            unifiedPlayer.startTime = audioContext.currentTime;
+            const startOffset = unifiedPlayer.pauseOffset % originalBuffer.duration;
+            unifiedPlayer.source.start(0, startOffset);
+            unifiedPlayer.isPlaying = true;
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.textContent = 'Pause';
+            updateMasterProgress();
+        }
+        function stopMasterPlayback(preservePauseOffset = false) {
+            if (unifiedPlayer.source) {
+                unifiedPlayer.source.onended = null; 
+                try { unifiedPlayer.source.stop(); } catch(e) { /* already stopped */ }
+                unifiedPlayer.source.disconnect(); 
+                unifiedPlayer.source = null;
+            }
+            if (unifiedPlayer.analyser) { 
+                try { unifiedPlayer.analyser.disconnect(); } catch(e) {/* already disconnected or no source */}
+            }
+
+            if (unifiedPlayer.animationFrameId) cancelAnimationFrame(unifiedPlayer.animationFrameId);
+            unifiedPlayer.isPlaying = false;
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.textContent = 'Play';
+            
+            if (!preservePauseOffset) {
+                unifiedPlayer.pauseOffset = 0;
+                if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '0%';
+                if (unifiedPlayer.timeDisplay && originalBuffer) unifiedPlayer.timeDisplay.textContent = `0:00 / ${formatTime(originalBuffer.duration)}`;
+                if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+            }
+        }
+        function toggleMasterPlayback() { 
+            if (!originalBuffer) return;
+            if (unifiedPlayer.isPlaying) {
+                unifiedPlayer.pauseOffset += (audioContext.currentTime - unifiedPlayer.startTime);
+                stopMasterPlayback(true); 
+            } else {
+                startMasterPlayback(); 
+            }
+        }
+        function handleMasterPlaybackEnd() { 
+            if (!unifiedPlayer.isPlaying) return; 
+
+            unifiedPlayer.isPlaying = false;
+            unifiedPlayer.pauseOffset = 0; 
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.textContent = 'Play';
+            if (unifiedPlayer.animationFrameId) cancelAnimationFrame(unifiedPlayer.animationFrameId);
+            
+            if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '100%';
+            if (unifiedPlayer.timeDisplay && originalBuffer) {
+                const duration = originalBuffer.duration;
+                unifiedPlayer.timeDisplay.textContent = `${formatTime(duration)} / ${formatTime(duration)}`;
+            }
+            setTimeout(() => { 
+                if (!unifiedPlayer.isPlaying && unifiedPlayer.fftCanvasCtx) { 
+                     drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
+                     if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '0%';
+                     if (unifiedPlayer.timeDisplay && originalBuffer) unifiedPlayer.timeDisplay.textContent = `0:00 / ${formatTime(originalBuffer.duration)}`;
+                }
+            }, 150); 
+        }
+        function updateMasterProgress() { 
+            if (!unifiedPlayer.isPlaying || !originalBuffer || !unifiedPlayer.source) return;
+
+            const elapsedTime = unifiedPlayer.pauseOffset + (audioContext.currentTime - unifiedPlayer.startTime);
+            const duration = originalBuffer.duration;
+            
+            if (elapsedTime >= duration) {
+                if(unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = '100%';
+                if(unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `${formatTime(duration)} / ${formatTime(duration)}`;
+                return; 
+            }
+
+            const progressPercent = Math.min((elapsedTime / duration) * 100, 100);
+            
+            if(unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = `${progressPercent}%`;
+            if(unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `${formatTime(elapsedTime)} / ${formatTime(duration)}`;
+
+            if (unifiedPlayer.analyser && unifiedPlayer.fftCanvasCtx) {
+                const bufferLength = unifiedPlayer.analyser.frequencyBinCount;
+                const dataArray = new Uint8Array(bufferLength);
+                unifiedPlayer.analyser.getByteFrequencyData(dataArray);
+                drawFrequencySpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas, dataArray);
+            }
+
+            unifiedPlayer.animationFrameId = requestAnimationFrame(updateMasterProgress);
+        }
+        function seekMasterTrack(event) { 
+            if (!originalBuffer || !unifiedPlayer.progressContainer) return; 
+            
+            const rect = unifiedPlayer.progressContainer.getBoundingClientRect();
+            const x = event.clientX - rect.left;
+            const effectiveWidth = unifiedPlayer.progressContainer.offsetWidth;
+            const clickPositionRatio = Math.max(0, Math.min(1, x / effectiveWidth));
+
+            const seekTime = clickPositionRatio * originalBuffer.duration;
+            
+            unifiedPlayer.pauseOffset = seekTime; 
+
+            const progressPercent = (seekTime / originalBuffer.duration) * 100;
+            if (unifiedPlayer.progressBar) unifiedPlayer.progressBar.style.width = `${progressPercent}%`;
+            if (unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `${formatTime(seekTime)} / ${formatTime(originalBuffer.duration)}`;
+
+            if (unifiedPlayer.isPlaying) { 
+                stopMasterPlayback(true); 
+                startMasterPlayback(); 
+            }
+        }
+        function drawFrequencySpectrum(ctx, canvas, dataArray) { 
+            if (!ctx || !canvas || !dataArray) return;
+            const barWidth = (canvas.width / dataArray.length) * 2.5; 
+            let barHeight;
+            let x = 0;
+
+            ctx.fillStyle = '#1a1a1a'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#f0a500'); 
+            gradient.addColorStop(0.7, '#d08c00'); 
+            gradient.addColorStop(1, '#a06800');   
+            ctx.fillStyle = gradient;
+
+            for (let i = 0; i < dataArray.length; i++) {
+                barHeight = (dataArray[i] / 255) * canvas.height; 
+                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                x += barWidth + 1; 
+            }
+        }
+        async function renderAndDownload() { 
+            if (!originalBuffer) {
+                return;
+            }
+            if(unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = true; 
+            downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled');
+            console.log("Starting offline render...");
+
+            const offlineCtx = new OfflineAudioContext(
+                originalBuffer.numberOfChannels,
+                originalBuffer.length,
+                originalBuffer.sampleRate
+            );
+
+            const offlineSource = offlineCtx.createBufferSource();
+            offlineSource.buffer = originalBuffer;
+
+            const offlineEffects = createOrGetEffectNodes(offlineCtx); 
+            applyRemasterSettingsToNodes(offlineEffects, 0); 
+
+            let lastOfflineNode = offlineSource;
+
+            lastOfflineNode = lastOfflineNode.connect(offlineEffects.eqBass)
+                .connect(offlineEffects.eqMids)
+                .connect(offlineEffects.eqTreble);
+            lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
+                .connect(offlineEffects.limiter);
+            lastOfflineNode.connect(offlineEffects.stereoSplitter);
+            offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
+            offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
+            lastOfflineNode = offlineEffects.stereoMerger;
+            lastOfflineNode.connect(offlineEffects.reverbInput);
+            lastOfflineNode = offlineEffects.reverbOutput;
+            const warmthInputSplitterOffline = lastOfflineNode;
+            warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);
+            warmthInputSplitterOffline.connect(offlineEffects.warmthDry);
+            lastOfflineNode = offlineEffects.warmthFinalMix;
+            lastOfflineNode.connect(offlineEffects.masterGain)
+                .connect(offlineCtx.destination);
+            
+            offlineSource.start(0);
+
+            try {
+                const renderedBuffer = await offlineCtx.startRendering();
+                console.log("Offline rendering complete. Buffer length:", renderedBuffer.length, "Sample rate:", renderedBuffer.sampleRate);
+                
+                const wavBlob = bufferToWave(renderedBuffer); 
+                console.log("WAV Blob created. Size:", wavBlob.size, "Type:", wavBlob.type);
+
+                if (wavBlob.size === 0) {
+                    console.error("Generated WAV blob is empty. Download aborted.");
+                    return;
+                }
+                
+                const url = URL.createObjectURL(wavBlob);
+                console.log("Blob URL created:", url);
+                
+                const a = document.createElement('a');
+                a.style.display = 'none'; a.href = url; a.download = 'remastered_audio.wav';
+                document.body.appendChild(a);
+                console.log("Download link created and appended to body.");
+                
+                a.click();
+                console.log("Download link clicked.");
+                
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                    console.log("Blob URL revoked and link removed.");
+                }, 100);
+            } catch (e) {
+                console.error("Error rendering or downloading audio:", e);
+            } finally {
+                updateButtonStates(); 
+            }
+        }
+        function bufferToWave(abuffer) { 
+            const numOfChan = abuffer.numberOfChannels,
+                  len = abuffer.length * numOfChan * 2 + 44, 
+                  buffer = new ArrayBuffer(len),
+                  view = new DataView(buffer),
+                  sampleRate = abuffer.sampleRate;
+            let pos = 0;
+
+            function setUint16(data) { view.setUint16(pos, data, true); pos += 2; }
+            function setUint32(data) { view.setUint32(pos, data, true); pos += 4; }
+
+            setUint32(0x46464952); setUint32(len - 8); setUint32(0x45564157);
+            setUint32(0x20746d66); setUint32(16); setUint16(1); setUint16(numOfChan);
+            setUint32(sampleRate); setUint32(sampleRate * numOfChan * 2);
+            setUint16(numOfChan * 2); setUint16(16);
+            setUint32(0x61746164); setUint32(len - pos - 4);
+
+            const channels = [];
+            for (let i = 0; i < numOfChan; i++) channels.push(abuffer.getChannelData(i));
+
+            for (let i = 0; i < abuffer.length; i++) {
+                for (let chan = 0; chan < numOfChan; chan++) {
+                    let sample = Math.max(-1, Math.min(1, channels[chan][i]));
+                    sample = sample < 0 ? sample * 32768 : sample * 32767;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+            }
+            return new Blob([buffer], { type: "audio/wav" });
+        }
+
+    </script>
+</body>
+</html>

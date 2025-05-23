@@ -640,6 +640,40 @@
                     icon.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
                 }
             });
+
+            // Track all button clicks that don't already have tracking
+            document.querySelectorAll('button').forEach(button => {
+                if (!button.hasAttribute('data-ga-tracked')) {
+                    button.setAttribute('data-ga-tracked', 'true');
+                    button.addEventListener('click', () => {
+                        trackGAEvent('button_click', {
+                            category: 'UI',
+                            label: button.textContent.trim(),
+                            button_id: button.id || 'unnamed_button'
+                        });
+                    });
+                }
+            });
+
+            // Track external link clicks and ensure proper referral info
+            document.querySelectorAll('a[href^="http"]').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const url = link.getAttribute('href');
+                    const linkText = link.textContent.trim();
+                    
+                    // Track the outbound link click
+                    trackGAEvent('outbound_link', {
+                        category: 'External Links',
+                        label: linkText,
+                        destination: url
+                    });
+
+                    // Ensure proper referral information is passed
+                    if (!link.hasAttribute('rel')) {
+                        link.setAttribute('rel', 'noopener');
+                    }
+                });
+            });
         }
         
         function resetAllControls() { 
@@ -1430,7 +1464,8 @@
 
     </script>
     <footer class="text-center text-xs text-gray-500 mt-12 py-6 border-t border-gray-700">
-        <p>&copy; <span id="currentYear"></span> <a href="https://mbdr.ai" target="_blank" class="hover:text-[#f0a500] transition-colors">Megan Ben Dor Ruthven</a>. All Rights Reserved. Open Source: <a href="https://github.com/mbdr-byte/audio-remaster" target="_blank" class="hover:text-[#f0a500] transition-colors">GitHub</a></p>
+        <p>Get help writing song lyrics with <a href="https://lyric-genie.com" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">Lyric Genie</a> for free!</p>
+        <p>&copy; <span id="currentYear"></span> <a href="https://mbdr.ai" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">Megan Ben Dor Ruthven</a>. All Rights Reserved. Open Sourced @ <a href="https://github.com/mbdr-byte/audio-remaster" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">GitHub</a>.</p>
     </footer>
     <script>
         document.getElementById('currentYear').textContent = new Date().getFullYear();

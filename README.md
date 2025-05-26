@@ -14,7 +14,7 @@ A browser-based tool for enhancing audio tracks with professional-grade effects.
 
 ## 🚀 Overview
 
-I created this tool to enable quick and simple remastering of music tracks created on [suno.com](https://suno.com). The application provides an intuitive interface for applying EQ, compression, stereo enhancement, and other audio effects to your tracks.
+I created this tool to enable quick and simple remastering of music tracks created on [suno.com](https://suno.com) that I wrote with [lyric-genie.com](https://lyric-genie.com). The application provides an intuitive interface for applying EQ, compression, stereo enhancement, and other audio effects to your tracks.
 
 ## ✨ Features
 

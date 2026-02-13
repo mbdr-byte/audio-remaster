@@ -1113,7 +1113,23 @@
             offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
             offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
             lastOfflineNode = offlineEffects.stereoMerger;
+            
+            // Set up reverb internal connections for offline context
             lastOfflineNode.connect(offlineEffects.reverbInput);
+            offlineEffects.reverbInput.connect(offlineEffects.reverbDry);
+            offlineEffects.reverbDry.connect(offlineEffects.reverbOutput);
+            
+            offlineEffects.reverbInput.connect(offlineEffects.reverbD1);
+            offlineEffects.reverbD1.connect(offlineEffects.reverbLpf);
+            offlineEffects.reverbLpf.connect(offlineEffects.reverbD2);
+            offlineEffects.reverbD2.connect(offlineEffects.reverbFb);
+            offlineEffects.reverbFb.connect(offlineEffects.reverbD1);
+            
+            offlineEffects.reverbD1.connect(offlineEffects.reverbWetSum);
+            offlineEffects.reverbD2.connect(offlineEffects.reverbWetSum);
+            offlineEffects.reverbWetSum.connect(offlineEffects.reverbWet);
+            offlineEffects.reverbWet.connect(offlineEffects.reverbOutput);
+            
             lastOfflineNode = offlineEffects.reverbOutput;
             const warmthInputSplitterOffline = lastOfflineNode;
             warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);
@@ -1317,7 +1333,23 @@
             offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
             offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
             lastOfflineNode = offlineEffects.stereoMerger;
+            
+            // Set up reverb internal connections for offline context
             lastOfflineNode.connect(offlineEffects.reverbInput);
+            offlineEffects.reverbInput.connect(offlineEffects.reverbDry);
+            offlineEffects.reverbDry.connect(offlineEffects.reverbOutput);
+            
+            offlineEffects.reverbInput.connect(offlineEffects.reverbD1);
+            offlineEffects.reverbD1.connect(offlineEffects.reverbLpf);
+            offlineEffects.reverbLpf.connect(offlineEffects.reverbD2);
+            offlineEffects.reverbD2.connect(offlineEffects.reverbFb);
+            offlineEffects.reverbFb.connect(offlineEffects.reverbD1);
+            
+            offlineEffects.reverbD1.connect(offlineEffects.reverbWetSum);
+            offlineEffects.reverbD2.connect(offlineEffects.reverbWetSum);
+            offlineEffects.reverbWetSum.connect(offlineEffects.reverbWet);
+            offlineEffects.reverbWet.connect(offlineEffects.reverbOutput);
+            
             lastOfflineNode = offlineEffects.reverbOutput;
             const warmthInputSplitterOffline = lastOfflineNode;
             warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);

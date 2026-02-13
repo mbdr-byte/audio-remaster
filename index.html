@@ -363,7 +363,7 @@
                                 <span id="stereoSpreadValue" class="value-display">0</span>
                                 <span class="unit-display">%</span>
                                 <span class="info-icon" data-tooltip-target="stereoInfoTooltip">i</span>
-                                <div id="stereoInfoTooltip" class="info-tooltip">Widens the stereo image (0-100%) by applying a slight delay (Haas effect) to one channel. 0% is no effect.</div>
+                                <div id="stereoInfoTooltip" class="info-tooltip">Widens the stereo image (0-100%) by applying a slight delay (Haas effect) to the right channel. 0% is no effect. Note: Only works on stereo files.</div>
                             </div>
                         </div>
                         <input type="range" id="stereoSpread" min="0" max="100" value="0" step="1" class="remaster-control">
@@ -615,9 +615,11 @@
                 if (control.input) { 
                     control.input.addEventListener('input', () => {
                         updateControlDisplays();
+                        // Apply settings in real-time if showing remastered audio and playing
                         if (unifiedPlayer.isShowingRemastered && unifiedPlayer.isPlaying) {
                             applyRemasterSettingsToNodes(getLiveEffectNodes());
                         }
+                        // Note: If paused, settings will be applied when playback starts/resumes
                     });
                 }
             });
@@ -924,10 +926,19 @@
                 lastNodeInChain = lastNodeInChain.connect(effects.compressor)
                     .connect(effects.limiter);
 
-                lastNodeInChain.connect(effects.stereoSplitter);
-                effects.stereoSplitter.connect(effects.pannerL, 0).connect(effects.stereoMerger, 0, 0); 
-                effects.stereoSplitter.connect(effects.haasDelay, 1).connect(effects.pannerR, 0).connect(effects.stereoMerger, 0, 1);
-                lastNodeInChain = effects.stereoMerger;
+                // Stereo spread routing (only for stereo files; mono files bypass this)
+                if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
+                    lastNodeInChain.connect(effects.stereoSplitter);
+                    // Left channel - direct pass-through
+                    effects.stereoSplitter.connect(effects.pannerL, 0);
+                    effects.pannerL.connect(effects.stereoMerger, 0, 0);
+                    // Right channel - through Haas delay (amount controlled by slider)
+                    effects.stereoSplitter.connect(effects.haasDelay, 1);
+                    effects.haasDelay.connect(effects.pannerR, 0);
+                    effects.pannerR.connect(effects.stereoMerger, 0, 1);
+                    lastNodeInChain = effects.stereoMerger;
+                }
+                // For mono files, skip stereo processing
                 
                 // Explicit connection to reverb system - ensure complete connections
                 lastNodeInChain.connect(effects.reverbInput);
@@ -976,9 +987,13 @@
             if (!stereoSplitter || stereoSplitter.context !== context) {
                 stereoSplitter = context.createChannelSplitter(2);
                 stereoMerger = context.createChannelMerger(2);
-                pannerL = context.createStereoPanner(); pannerL.pan.value = -1; 
-                pannerR = context.createStereoPanner(); pannerR.pan.value = 1; 
-                haasDelay = context.createDelay(0.1); haasDelay.delayTime.value = 0;
+                // Use gain nodes as pass-through to preserve original stereo positions
+                pannerL = context.createGain(); 
+                pannerL.gain.value = 1.0; // Unity gain - no volume change
+                pannerR = context.createGain();
+                pannerR.gain.value = 1.0; // Unity gain - no volume change
+                haasDelay = context.createDelay(0.1); 
+                haasDelay.delayTime.value = 0; // No delay at 0% spread
             }
             
             // Reverb (Simple Algorithmic)
@@ -1026,12 +1041,14 @@
 
         function applyRemasterSettingsToNodes(nodes, time = audioContext.currentTime) {
             if (!nodes || !nodes.eqBass) { return; } 
-            console.log("Applying settings to nodes at time:", time);
             
             // EQ, Dynamics, Master Gain
-            nodes.eqBass.gain.setValueAtTime(parseFloat(controls.eqBass.input.value), time);
-            nodes.eqMids.gain.setValueAtTime(parseFloat(controls.eqMids.input.value), time);
-            nodes.eqTreble.gain.setValueAtTime(parseFloat(controls.eqTreble.input.value), time);
+            const eqBassVal = parseFloat(controls.eqBass.input.value);
+            const eqMidsVal = parseFloat(controls.eqMids.input.value);
+            const eqTrebleVal = parseFloat(controls.eqTreble.input.value);
+            nodes.eqBass.gain.setValueAtTime(eqBassVal, time);
+            nodes.eqMids.gain.setValueAtTime(eqMidsVal, time);
+            nodes.eqTreble.gain.setValueAtTime(eqTrebleVal, time);
             nodes.compressor.threshold.setValueAtTime(parseFloat(controls.compressorThreshold.input.value), time);
             nodes.compressor.ratio.setValueAtTime(parseFloat(controls.compressorRatio.input.value), time);
             nodes.compressor.attack.setValueAtTime(0.003, time); nodes.compressor.release.setValueAtTime(0.25, time); nodes.compressor.knee.setValueAtTime(6, time);
@@ -1071,6 +1088,22 @@
                 nodes.warmthInputToShaper.gain.setValueAtTime(1.0, time); 
                 nodes.warmthWet.gain.setValueAtTime(wetGainValue, time);
             }
+            
+            // Log applied settings for debugging
+            if (time === 0 || Math.random() < 0.1) { // Log at start or occasionally (10% of the time)
+                console.log("Applied effect settings:", {
+                    eqBass: eqBassVal + "dB",
+                    eqMids: eqMidsVal + "dB", 
+                    eqTreble: eqTrebleVal + "dB",
+                    compThreshold: parseFloat(controls.compressorThreshold.input.value) + "dB",
+                    compRatio: parseFloat(controls.compressorRatio.input.value) + ":1",
+                    limiterThreshold: parseFloat(controls.limiterThreshold.input.value) + "dB",
+                    masterGain: gainValueDb + "dB",
+                    stereoSpread: spreadPercent + "%",
+                    reverbMix: (reverbMixVal * 100).toFixed(1) + "%",
+                    warmth: warmthPercent + "%"
+                });
+            }
         }
         
         function makeDistortionCurve(amount) {
@@ -1109,10 +1142,17 @@
                 .connect(offlineEffects.eqTreble);
             lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
                 .connect(offlineEffects.limiter);
-            lastOfflineNode.connect(offlineEffects.stereoSplitter);
-            offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
-            offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
-            lastOfflineNode = offlineEffects.stereoMerger;
+            // Stereo spread routing (only for stereo files)
+            if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
+                lastOfflineNode.connect(offlineEffects.stereoSplitter);
+                offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0);
+                offlineEffects.pannerL.connect(offlineEffects.stereoMerger, 0, 0);
+                offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1);
+                offlineEffects.haasDelay.connect(offlineEffects.pannerR, 0);
+                offlineEffects.pannerR.connect(offlineEffects.stereoMerger, 0, 1);
+                lastOfflineNode = offlineEffects.stereoMerger;
+            }
+            // For mono files, skip stereo processing
             
             // Set up reverb internal connections for offline context
             lastOfflineNode.connect(offlineEffects.reverbInput);
@@ -1329,10 +1369,17 @@
                 .connect(offlineEffects.eqTreble);
             lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
                 .connect(offlineEffects.limiter);
-            lastOfflineNode.connect(offlineEffects.stereoSplitter);
-            offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0).connect(offlineEffects.stereoMerger, 0, 0);
-            offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1).connect(offlineEffects.pannerR, 0).connect(offlineEffects.stereoMerger, 0, 1);
-            lastOfflineNode = offlineEffects.stereoMerger;
+            // Stereo spread routing (only for stereo files)
+            if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
+                lastOfflineNode.connect(offlineEffects.stereoSplitter);
+                offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0);
+                offlineEffects.pannerL.connect(offlineEffects.stereoMerger, 0, 0);
+                offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1);
+                offlineEffects.haasDelay.connect(offlineEffects.pannerR, 0);
+                offlineEffects.pannerR.connect(offlineEffects.stereoMerger, 0, 1);
+                lastOfflineNode = offlineEffects.stereoMerger;
+            }
+            // For mono files, skip stereo processing
             
             // Set up reverb internal connections for offline context
             lastOfflineNode.connect(offlineEffects.reverbInput);

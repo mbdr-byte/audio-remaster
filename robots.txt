@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://remaster.mbdr.ai/sitemap.xml

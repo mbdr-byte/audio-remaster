@@ -12,7 +12,14 @@
     <meta name="author" content="Megan Ben Dor Ruthven">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://remaster.mbdr.ai">
+    <link rel="sitemap" type="application/xml" title="Sitemap" href="https://remaster.mbdr.ai/sitemap.xml">
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+    
+    <!-- Preconnect to external domains for faster loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://www.googletagmanager.com">
+    <link rel="dns-prefetch" href="https://www.google-analytics.com">
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website">
@@ -66,8 +73,52 @@
     </script>
     <!-- End Google Analytics -->
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Optimized font loading with font-display swap to prevent render blocking -->
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet"></noscript>
+    <style>
+        /* Minimal Tailwind utilities - only what's actually used */
+        .hidden{display:none}
+        .flex{display:flex}
+        .inline-flex{display:inline-flex}
+        .grid{display:grid}
+        .max-w-5xl{max-width:64rem}
+        .mx-auto{margin-left:auto;margin-right:auto}
+        .mb-10{margin-bottom:2.5rem}
+        .mb-6{margin-bottom:1.5rem}
+        .mt-2{margin-top:0.5rem}
+        .mt-3{margin-top:0.75rem}
+        .mt-6{margin-top:1.5rem}
+        .mt-10{margin-top:2.5rem}
+        .mt-12{margin-top:3rem}
+        .p-4{padding:1rem}
+        .py-6{padding-top:1.5rem;padding-bottom:1.5rem}
+        .text-5xl{font-size:3rem;line-height:1}
+        .text-lg{font-size:1.125rem;line-height:1.75rem}
+        .text-sm{font-size:0.875rem;line-height:1.25rem}
+        .text-xs{font-size:0.75rem;line-height:1rem}
+        .font-bold{font-weight:700}
+        .font-semibold{font-weight:600}
+        .tracking-wider{letter-spacing:0.05em}
+        .text-center{text-align:center}
+        .text-gray-400{color:rgb(156 163 175)}
+        .text-gray-500{color:rgb(107 114 128)}
+        .border-t{border-top-width:1px}
+        .border-gray-700{border-color:rgb(55 65 81)}
+        .space-y-6>:not([hidden])~:not([hidden]){margin-top:1.5rem}
+        .space-x-4>:not([hidden])~:not([hidden]){margin-left:1rem}
+        .items-center{align-items:center}
+        .justify-between{justify-content:space-between}
+        .justify-center{justify-content:center}
+        .gap-x-8{column-gap:2rem}
+        .gap-y-8{row-gap:2rem}
+        .w-28{width:7rem}
+        .transition-colors{transition-property:color,background-color,border-color,text-decoration-color,fill,stroke;transition-timing-function:cubic-bezier(0.4,0,0.2,1);transition-duration:150ms}
+        @media(min-width:768px){
+            .md\:p-8{padding:2rem}
+            .md\:grid-cols-3{grid-template-columns:repeat(3,minmax(0,1fr))}
+        }
+    </style>
     <style>
         body {
             font-family: 'IBM Plex Mono', monospace; 
@@ -154,6 +205,7 @@
             font-size: 0.9rem; font-weight: bold;
         }
         .unit-display { font-size: 0.75rem; color: #aaa; margin-left: 2px; margin-right: 8px;}
+        .visually-hidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); border: 0; }
         
         .audio-player-unified { border: 1px solid #444; padding: 1.5rem; border-radius: 8px; }
         .progress-bar-container {
@@ -220,13 +272,19 @@
     </style>
 </head>
 <body class="p-4 md:p-8">
-    <div class="max-w-5xl mx-auto"> 
+    <div class="max-w-5xl mx-auto">
+        <!-- Skip to main content link for accessibility -->
+        <a href="#main-content" style="position:absolute;left:-9999px;z-index:999;padding:1em;background-color:#f0a500;color:#1e1e1e;text-decoration:none;font-weight:bold" onfocus="this.style.left='1em'" onblur="this.style.left='-9999px'">Skip to main content</a>
+        
         <header class="mb-10 text-center">
             <h1 class="text-5xl font-bold text-[#f0a500] tracking-wider">AUDIO REMASTERING LAB</h1>
             <p class="text-lg text-gray-400 mt-3">Upload, Tweak, Compare, and Download Your Enhanced Tracks.</p>
         </header>
 
-        <div class="control-group">
+        <main id="main-content">
+
+        <section class="control-group">
+            <h2 class="visually-hidden">Audio Remastering Controls</h2>
             <h3>1. Load Audio File</h3>
             <div class="file-input-container mt-2">
                 <label for="audioFile" id="audioFileButton" class="btn btn-primary">Choose File</label>
@@ -235,9 +293,9 @@
             </div>
             <div id="originalAnalysisDisplayWrapper" class="mt-6 hidden"> 
                 </div>
-        </div>
+        </section>
 
-        <div id="previewABSection" class="control-group hidden"> 
+        <section id="previewABSection" class="control-group hidden" aria-label="Audio Preview and A/B Testing"> 
             <h3>2. Preview & A/B Test</h3> 
             <div class="ab-toggle-container">
                 <span id="labelOriginal" class="ab-toggle-label font-semibold text-[#f0a500]">ORIGINAL (A)</span>
@@ -255,11 +313,11 @@
                 <div class="progress-bar-container" id="unifiedProgressContainer">
                     <div id="unifiedProgressBar" class="progress-bar"></div>
                 </div>
-                <canvas id="unifiedFftCanvas" class="visualization-canvas"></canvas>
+                <canvas id="unifiedFftCanvas" class="visualization-canvas" role="img" aria-label="Audio frequency spectrum visualization"></canvas>
             </div>
-        </div>
+        </section>
         
-        <div id="controlsSection" class="control-group hidden"> 
+        <section id="controlsSection" class="control-group hidden" aria-label="Remastering Controls"> 
             <h3>3. Remastering Console</h3> 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-8"> 
                 <div class="space-y-6"> 
@@ -400,13 +458,14 @@
             </div>
             <div id="remasteredAnalysisDisplayWrapper" class="mt-6 hidden"> 
                 </div>
-        </div>
+        </section>
 
-        <div id="downloadSection" class="control-group hidden">
+        <section id="downloadSection" class="control-group hidden" aria-label="Export Controls">
             <h3>4. Export Master</h3> <div class="text-center">
                 <button id="downloadBtn" class="btn btn-download btn-lg">Download Remastered (WAV)</button>
             </div>
-        </div>
+        </section>
+        </main>
     </div>
 
     <script>
@@ -1542,9 +1601,9 @@
         }
 
     </script>
-    <footer class="text-center text-xs text-gray-500 mt-12 py-6 border-t border-gray-700">
-        <p>Get help writing song lyrics with <a href="https://lyric-genie.com" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">Lyric Genie</a> for free!</p>
-        <p>&copy; <span id="currentYear"></span> <a href="https://mbdr.ai" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">Megan Ben Dor Ruthven</a>. All Rights Reserved. Open Sourced @ <a href="https://github.com/mbdr-byte/audio-remaster" target="_blank" rel="noopener" class="hover:text-[#f0a500] transition-colors">GitHub</a>.</p>
+    <footer class="text-center text-xs mt-12 py-6 border-t border-gray-700" style="color: #b5b5b5;">
+        <p style="color: #b5b5b5;">Get help writing song lyrics with <a href="https://lyric-genie.com" target="_blank" rel="noopener" style="color: #b5b5b5; text-decoration: underline;" class="hover:text-[#f0a500] transition-colors">Lyric Genie</a> for free!</p>
+        <p style="color: #b5b5b5;">&copy; <span id="currentYear"></span> <a href="https://mbdr.ai" target="_blank" rel="noopener" style="color: #b5b5b5; text-decoration: underline;" class="hover:text-[#f0a500] transition-colors">Megan Ben Dor Ruthven</a>. All Rights Reserved. Open Sourced @ <a href="https://github.com/mbdr-byte/audio-remaster" target="_blank" rel="noopener" style="color: #b5b5b5; text-decoration: underline;" class="hover:text-[#f0a500] transition-colors">GitHub</a>.</p>
     </footer>
     <script>
         document.getElementById('currentYear').textContent = new Date().getFullYear();

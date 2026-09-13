@@ -161,7 +161,16 @@
         input[type="range"] {
             -webkit-appearance: none; appearance: none; width: 100%;
             height: 12px; background: #1a1a1a; border-radius: 6px;
-            outline: none; margin-top: 0.5rem; border: 1px solid #444; cursor: pointer;
+            margin-top: 0.5rem; border: 1px solid #444; cursor: pointer;
+        }
+        /* Keyboard focus must stay visible (WCAG 2.4.7). */
+        input[type="range"]:focus-visible,
+        .btn:focus-visible,
+        .info-icon:focus-visible,
+        #audioFile:focus-visible + .btn,
+        .ab-toggle-switch input:focus-visible + .ab-slider {
+            outline: 3px solid #f0a500;
+            outline-offset: 2px;
         }
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none; appearance: none; width: 24px; height: 24px;
@@ -199,6 +208,7 @@
             background-color: #3a3a3a !important; color: #777 !important;
             cursor: not-allowed !important; box-shadow: none !important; border-color: #333 !important;
         }
+        .btn-disabled { pointer-events: none; }
         .value-display-container { display: flex; align-items: center; justify-content: flex-end; }
         .value-display {
             min-width: 40px; text-align: right; color: #f0a500;
@@ -223,8 +233,9 @@
             width: 20px; height: 20px; border-radius: 50%; background-color: #777; color: #1e1e1e;
             font-size: 0.75rem; line-height: 20px; cursor: pointer; margin-left: 8px;
             font-weight: bold; flex-shrink: 0; transition: background-color 0.2s;
+            border: 0; padding: 0; font-family: inherit;
         }
-        .info-icon:hover { background-color: #f0a500; }
+        .info-icon:hover, .info-icon:focus-visible { background-color: #f0a500; }
         .info-tooltip {
             display: none; position: absolute; background-color: #333;
             color: #e0e0e0; padding: 0.75rem 1rem; border-radius: 6px;
@@ -287,9 +298,9 @@
             <h2 class="visually-hidden">Audio Remastering Controls</h2>
             <h3>1. Load Audio File</h3>
             <div class="file-input-container mt-2">
+                <input type="file" id="audioFile" accept="audio/*" class="visually-hidden"/>
                 <label for="audioFile" id="audioFileButton" class="btn btn-primary">Choose File</label>
-                <input type="file" id="audioFile" accept="audio/*" class="hidden"/> 
-                <p id="fileName" class="text-sm text-gray-500">No file selected.</p>
+                <p id="fileName" class="text-sm text-gray-500" role="status">No file selected.</p>
             </div>
             <div id="originalAnalysisDisplayWrapper" class="mt-6 hidden"> 
                 </div>
@@ -300,7 +311,7 @@
             <div class="ab-toggle-container">
                 <span id="labelOriginal" class="ab-toggle-label font-semibold text-[#f0a500]">ORIGINAL (A)</span>
                 <label class="ab-toggle-switch">
-                    <input type="checkbox" id="abToggleSwitch">
+                    <input type="checkbox" id="abToggleSwitch" aria-label="Play remastered audio instead of the original">
                     <span class="ab-slider"></span>
                 </label>
                 <span id="labelRemastered" class="ab-toggle-label text-gray-500">REMASTERED (B)</span>
@@ -328,8 +339,8 @@
                             <div class="value-display-container">
                                 <span id="eqBassValue" class="value-display">0</span>
                                 <span class="unit-display">dB</span>
-                                <span class="info-icon" data-tooltip-target="eqBassInfoTooltip">i</span>
-                                <div id="eqBassInfoTooltip" class="info-tooltip">Controls low frequencies (e.g., kick drums, bass guitars). Positive values boost, negative values cut.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="eqBassInfoTooltip" aria-describedby="eqBassInfoTooltip" aria-label="What does Bass do?">i</button>
+                                <div id="eqBassInfoTooltip" class="info-tooltip" role="tooltip">Controls low frequencies (e.g., kick drums, bass guitars). Positive values boost, negative values cut.</div>
                             </div>
                         </div>
                         <input type="range" id="eqBass" min="-15" max="15" value="0" step="0.1" class="remaster-control">
@@ -340,8 +351,8 @@
                             <div class="value-display-container">
                                 <span id="eqMidsValue" class="value-display">0</span>
                                 <span class="unit-display">dB</span>
-                                <span class="info-icon" data-tooltip-target="eqMidsInfoTooltip">i</span>
-                                <div id="eqMidsInfoTooltip" class="info-tooltip">Controls mid-range frequencies (e.g., vocals, main body of instruments). Positive values boost, negative values cut.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="eqMidsInfoTooltip" aria-describedby="eqMidsInfoTooltip" aria-label="What does Mids do?">i</button>
+                                <div id="eqMidsInfoTooltip" class="info-tooltip" role="tooltip">Controls mid-range frequencies (e.g., vocals, main body of instruments). Positive values boost, negative values cut.</div>
                             </div>
                         </div>
                         <input type="range" id="eqMids" min="-15" max="15" value="0" step="0.1" class="remaster-control">
@@ -352,8 +363,8 @@
                             <div class="value-display-container">
                                 <span id="eqTrebleValue" class="value-display">0</span>
                                 <span class="unit-display">dB</span>
-                                <span class="info-icon" data-tooltip-target="eqTrebleInfoTooltip">i</span>
-                                <div id="eqTrebleInfoTooltip" class="info-tooltip">Controls high frequencies (e.g., cymbals, hi-hats, airiness). Positive values boost, negative values cut.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="eqTrebleInfoTooltip" aria-describedby="eqTrebleInfoTooltip" aria-label="What does Treble do?">i</button>
+                                <div id="eqTrebleInfoTooltip" class="info-tooltip" role="tooltip">Controls high frequencies (e.g., cymbals, hi-hats, airiness). Positive values boost, negative values cut.</div>
                             </div>
                         </div>
                         <input type="range" id="eqTreble" min="-15" max="15" value="0" step="0.1" class="remaster-control">
@@ -368,8 +379,8 @@
                             <div class="value-display-container">
                                 <span id="compressorThresholdValue" class="value-display">-24</span>
                                 <span class="unit-display">dB</span>
-                                <span class="info-icon" data-tooltip-target="compThresholdInfoTooltip">i</span>
-                                <div id="compThresholdInfoTooltip" class="info-tooltip">The level at which the compressor starts to reduce volume. Sounds louder than this threshold will be compressed.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="compThresholdInfoTooltip" aria-describedby="compThresholdInfoTooltip" aria-label="What does Compressor Threshold do?">i</button>
+                                <div id="compThresholdInfoTooltip" class="info-tooltip" role="tooltip">The level at which the compressor starts to reduce volume. Sounds louder than this threshold will be compressed.</div>
                             </div>
                         </div>
                         <input type="range" id="compressorThreshold" min="-60" max="0" value="-24" step="1" class="remaster-control">
@@ -380,8 +391,8 @@
                             <div class="value-display-container">
                                 <span id="compressorRatioValue" class="value-display">4</span>
                                 <span class="unit-display">:1</span>
-                                <span class="info-icon" data-tooltip-target="compRatioInfoTooltip">i</span>
-                                <div id="compRatioInfoTooltip" class="info-tooltip">How much volume is reduced above the threshold. E.g., 4:1 means if input is 4dB over, output is 1dB over.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="compRatioInfoTooltip" aria-describedby="compRatioInfoTooltip" aria-label="What does Compressor Ratio do?">i</button>
+                                <div id="compRatioInfoTooltip" class="info-tooltip" role="tooltip">How much volume is reduced above the threshold. E.g., 4:1 means if input is 4dB over, output is 1dB over.</div>
                             </div>
                         </div>
                         <input type="range" id="compressorRatio" min="1" max="20" value="4" step="0.5" class="remaster-control">
@@ -392,8 +403,8 @@
                             <div class="value-display-container">
                                 <span id="limiterThresholdValue" class="value-display">-1</span>
                                 <span class="unit-display">dBFS</span>
-                                <span class="info-icon" data-tooltip-target="limiterInfoTooltip">i</span>
-                                <div id="limiterInfoTooltip" class="info-tooltip">The absolute maximum level. Sounds attempting to exceed this will be sharply attenuated to prevent clipping.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="limiterInfoTooltip" aria-describedby="limiterInfoTooltip" aria-label="What does Limiter Threshold do?">i</button>
+                                <div id="limiterInfoTooltip" class="info-tooltip" role="tooltip">The absolute maximum output level. This is the final stage of the chain &mdash; it runs after Master Gain, so nothing downstream can push the output past this ceiling.</div>
                             </div>
                         </div>
                         <input type="range" id="limiterThreshold" min="-20" max="0" value="-1" step="0.1" class="remaster-control">
@@ -404,8 +415,8 @@
                             <div class="value-display-container">
                                 <span id="gainValue" class="value-display">0</span>
                                 <span class="unit-display">dB</span>
-                                <span class="info-icon" data-tooltip-target="gainInfoTooltip">i</span>
-                                <div id="gainInfoTooltip" class="info-tooltip">Adjusts the final output volume of the entire processed audio after other effects.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="gainInfoTooltip" aria-describedby="gainInfoTooltip" aria-label="What does Master Gain do?">i</button>
+                                <div id="gainInfoTooltip" class="info-tooltip" role="tooltip">Adjusts the final output volume of the entire processed audio after other effects.</div>
                             </div>
                         </div>
                         <input type="range" id="gain" min="-12" max="12" value="0" step="0.1" class="remaster-control">
@@ -420,8 +431,8 @@
                             <div class="value-display-container">
                                 <span id="stereoSpreadValue" class="value-display">0</span>
                                 <span class="unit-display">%</span>
-                                <span class="info-icon" data-tooltip-target="stereoInfoTooltip">i</span>
-                                <div id="stereoInfoTooltip" class="info-tooltip">Widens the stereo image (0-100%) by applying a slight delay (Haas effect) to the right channel. 0% is no effect. Note: Only works on stereo files.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="stereoInfoTooltip" aria-describedby="stereoInfoTooltip" aria-label="What does Stereo Spread do?">i</button>
+                                <div id="stereoInfoTooltip" class="info-tooltip" role="tooltip">Widens the stereo image (0-100%) by applying a slight delay (Haas effect) to the right channel. 0% is no effect. Note: Only works on stereo files.</div>
                             </div>
                         </div>
                         <input type="range" id="stereoSpread" min="0" max="100" value="0" step="1" class="remaster-control">
@@ -432,8 +443,8 @@
                             <div class="value-display-container">
                                 <span id="reverbMixValue" class="value-display">0</span>
                                 <span class="unit-display">%</span>
-                                <span class="info-icon" data-tooltip-target="reverbInfoTooltip">i</span>
-                                <div id="reverbInfoTooltip" class="info-tooltip">Controls the amount of algorithmic reverb (0-30%). Adds a sense of space to the audio.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="reverbInfoTooltip" aria-describedby="reverbInfoTooltip" aria-label="What does Reverb Mix do?">i</button>
+                                <div id="reverbInfoTooltip" class="info-tooltip" role="tooltip">Controls the amount of algorithmic reverb (0-30%). Adds a sense of space to the audio.</div>
                             </div>
                         </div>
                         <input type="range" id="reverbMix" min="0" max="30" value="0" step="1" class="remaster-control">
@@ -444,8 +455,8 @@
                             <div class="value-display-container">
                                 <span id="warmthValue" class="value-display">0</span>
                                 <span class="unit-display">%</span>
-                                <span class="info-icon" data-tooltip-target="warmthInfoTooltip">i</span>
-                                <div id="warmthInfoTooltip" class="info-tooltip">Mixes in subtle harmonic saturation for an analog-like warmth and character.</div>
+                                <button type="button" class="info-icon" data-ga-tracked="true" data-tooltip-target="warmthInfoTooltip" aria-describedby="warmthInfoTooltip" aria-label="What does Warmth do?">i</button>
+                                <div id="warmthInfoTooltip" class="info-tooltip" role="tooltip">Mixes in subtle harmonic saturation for an analog-like warmth and character.</div>
                             </div>
                         </div>
                         <input type="range" id="warmth" min="0" max="100" value="0" step="1" class="remaster-control">
@@ -473,25 +484,22 @@
         let audioContext;
         let originalBuffer = null;
         let isLoadingFile = false; 
-        let selectedFile = null; // Will be removed, not used in the new approach
+        let sourceFileName = null;
         
         const unifiedPlayer = {
             source: null, analyser: null, mainOutputGain: null, 
             isPlaying: false, startTime: 0, pauseOffset: 0, animationFrameId: null,
             isShowingRemastered: false, 
             playPauseBtn: null, progressBar: null, progressContainer: null, timeDisplay: null,
-            fftCanvas: null, fftCanvasCtx: null,
+            fftCanvas: null, fftCanvasCtx: null, freqData: null, dpr: 1,
             abToggle: null, labelOriginal: null, labelRemastered: null
         };
 
-        // Effect Nodes
-        let masterGainNode, limiterNode, compressorNode; 
-        let eqBassNode, eqMidsNode, eqTrebleNode;
-        
-        let stereoSplitter, stereoMerger, haasDelay, pannerL, pannerR;
-        let reverbInput, reverbDry, reverbWet, reverbOutput, reverbWetSum; 
-        let reverbD1, reverbD2, reverbFb, reverbLpf;
-        let warmthDry, warmthWet, warmthShaper, warmthInputToShaper, warmthFinalMix;
+        // Effect nodes for live playback. Offline renders build their own set:
+        // a Web Audio node belongs to exactly one context and cannot be reused
+        // across them, so sharing these globals used to leave the live graph
+        // pointing at nodes from a finished offline render.
+        let liveEffects = null;
 
 
         const defaultSettings = {
@@ -534,7 +542,12 @@
             const sec = Math.floor(seconds % 60).toString().padStart(2, '0');
             return `${min}:${sec}`;
         }
-        function updateButtonStates() { 
+        function setFilePickerBusy(busy) {
+            audioFileInput.disabled = busy;
+            audioFileButton.classList.toggle('btn-disabled', busy);
+            audioFileButton.setAttribute('aria-disabled', busy ? 'true' : 'false');
+        }
+        function updateButtonStates() {
             const isFileLoaded = originalBuffer !== null;
             if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = !isFileLoaded;
             downloadBtn.disabled = !isFileLoaded;
@@ -542,7 +555,7 @@
             evaluateRemasterBtn.disabled = !isFileLoaded;
             if (unifiedPlayer.abToggle) unifiedPlayer.abToggle.disabled = !isFileLoaded;
 
-            [unifiedPlayer.playPauseBtn, downloadBtn, resetControlsBtn, evaluateRemasterBtn, audioFileButton].forEach(btn => {
+            [unifiedPlayer.playPauseBtn, downloadBtn, resetControlsBtn, evaluateRemasterBtn].forEach(btn => {
                 if (btn) { 
                     if (btn.disabled) btn.classList.add('btn-disabled');
                     else btn.classList.remove('btn-disabled');
@@ -578,21 +591,42 @@
             updateControlDisplays(); 
             updateButtonStates();
             updateABToggleVisuals(); 
+            resizeSpectrumCanvas();
             if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
-            
+            window.addEventListener('resize', resizeSpectrumCanvas);
+
             trackGAEvent('page_view', {
                 page_title: document.title,
                 page_location: window.location.href,
                 audio_context_state: audioContext.state
             });
         };
-        function drawPlaceholderSpectrum(ctx, canvas) { 
+        // Match the canvas bitmap to its CSS box (and pixel density) so the
+        // spectrum is drawn at native resolution instead of being upscaled.
+        function resizeSpectrumCanvas() {
+            const canvas = unifiedPlayer.fftCanvas;
+            if (!canvas) return;
+            const rect = canvas.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            const dpr = window.devicePixelRatio || 1;
+            const width = Math.round(rect.width * dpr);
+            const height = Math.round(rect.height * dpr);
+            unifiedPlayer.dpr = dpr;
+            if (canvas.width === width && canvas.height === height) return;
+            canvas.width = width;
+            canvas.height = height;
+            if (!unifiedPlayer.isPlaying) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, canvas);
+        }
+
+        function drawPlaceholderSpectrum(ctx, canvas) {
             if (!ctx || !canvas) return;
-            ctx.fillStyle = '#1a1a1a'; 
+            const dpr = unifiedPlayer.dpr || 1;
+            ctx.fillStyle = '#1a1a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#555'; 
-            ctx.font = "14px 'IBM Plex Mono'";
+            ctx.fillStyle = '#555';
+            ctx.font = `${14 * dpr}px 'IBM Plex Mono', monospace`;
             ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
             ctx.fillText('Spectrum Analyzer', canvas.width / 2, canvas.height / 2);
         }
 
@@ -613,11 +647,12 @@
                     return;
                 }
                 
+                // Deliberately aggregate-only: the file name is the user's
+                // content and never leaves the browser.
                 trackGAEvent('file_operation', {
                     operation: 'file_selected',
                     file_type: file.type,
-                    file_size: file.size,
-                    file_name: file.name
+                    file_size: file.size
                 });
                 
                 // Set visual feedback that we're about to process
@@ -625,9 +660,7 @@
                 
                 // Actually process the file - make sure audioContext is running first
                 if (audioContext.state === 'suspended') {
-                    console.log("AudioFileInput: AudioContext is suspended. Attempting to resume...");
                     audioContext.resume().then(() => {
-                        console.log("AudioFileInput: AudioContext resumed successfully. State:", audioContext.state);
                         processSelectedFile(file);
                     }).catch(err => {
                         console.error("AudioFileInput: Error resuming AudioContext:", err);
@@ -682,25 +715,40 @@
                     });
                 }
             });
-            document.querySelectorAll('.info-icon').forEach(icon => { 
-                 const tooltipId = icon.dataset.tooltipTarget;
-                const tooltip = document.getElementById(tooltipId);
-                if (tooltip) {
-                    icon.addEventListener('mouseenter', (e) => {
-                        const iconRect = icon.getBoundingClientRect();
-                        tooltip.style.display = 'block';
-                        let top = iconRect.bottom + window.scrollY + 8;
-                        let left = iconRect.left + window.scrollX - (tooltip.offsetWidth / 2) + (iconRect.width / 2);
-                        if (left < 5) left = 5;
-                        if (left + tooltip.offsetWidth > window.innerWidth) left = window.innerWidth - tooltip.offsetWidth - 5;
-                        if (top + tooltip.offsetHeight > window.innerHeight + window.scrollY) {
-                           top = iconRect.top + window.scrollY - tooltip.offsetHeight - 8;
-                        }
-                        tooltip.style.top = `${top}px`; tooltip.style.left = `${left}px`;
-                    });
-                    icon.addEventListener('mouseleave', () => { tooltip.style.display = 'none'; });
-                }
+            document.querySelectorAll('.info-icon').forEach(icon => {
+                const tooltip = document.getElementById(icon.dataset.tooltipTarget);
+                if (!tooltip) return;
+
+                const showTooltip = () => {
+                    const iconRect = icon.getBoundingClientRect();
+                    tooltip.style.display = 'block';
+                    let top = iconRect.bottom + window.scrollY + 8;
+                    let left = iconRect.left + window.scrollX - (tooltip.offsetWidth / 2) + (iconRect.width / 2);
+                    if (left < 5) left = 5;
+                    if (left + tooltip.offsetWidth > window.innerWidth) left = window.innerWidth - tooltip.offsetWidth - 5;
+                    if (top + tooltip.offsetHeight > window.innerHeight + window.scrollY) {
+                        top = iconRect.top + window.scrollY - tooltip.offsetHeight - 8;
+                    }
+                    tooltip.style.top = `${top}px`;
+                    tooltip.style.left = `${left}px`;
+                };
+                const hideTooltip = () => { tooltip.style.display = 'none'; };
+
+                icon.addEventListener('mouseenter', showTooltip);
+                icon.addEventListener('focus', showTooltip);
+                icon.addEventListener('mouseleave', hideTooltip);
+                icon.addEventListener('blur', hideTooltip);
+                icon.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    tooltip.style.display === 'block' ? hideTooltip() : showTooltip();
+                });
+                icon.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideTooltip(); });
             });
+
+            // Buttons handled above already emit a specific event; mark them so
+            // the catch-all below does not double-count every click.
+            [unifiedPlayer.playPauseBtn, downloadBtn, resetControlsBtn, evaluateRemasterBtn]
+                .forEach(btn => { if (btn) btn.setAttribute('data-ga-tracked', 'true'); });
 
             // Track all button clicks that don't already have tracking
             document.querySelectorAll('button').forEach(button => {
@@ -793,13 +841,12 @@
         // Process a file that was just selected in the file input
         async function processSelectedFile(file) {
             if (isLoadingFile || !file) {
-                console.log("processSelectedFile: Already loading or no file provided");
                 return;
             }
             
-            console.log(`Processing file: ${file.name}`);
             isLoadingFile = true;
-            audioFileButton.disabled = true;
+            sourceFileName = file.name;
+            setFilePickerBusy(true);
             updateButtonStates();
             
             // Reset UI elements
@@ -827,10 +874,8 @@
                 
                 // Read and decode the audio file
                 const arrayBuffer = await file.arrayBuffer();
-                console.log(`Decoding audio file: ${file.name}, buffer length: ${arrayBuffer.byteLength}`);
                 
                 originalBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                console.log(`Audio decoded successfully: ${file.name}, duration: ${originalBuffer.duration}`);
                 
                 if (!originalBuffer || originalBuffer.length === 0) {
                     throw new Error("Decoded audio buffer is invalid or empty");
@@ -844,6 +889,7 @@
                 controlsSection.classList.remove('hidden');
                 previewABSection.classList.remove('hidden');
                 downloadSection.classList.remove('hidden');
+                resizeSpectrumCanvas();
                 
                 // Run audio analysis and reset controls
                 analyzeAudio(originalBuffer, "originalAnalysisDisplayWrapper", "Original Audio Metrics");
@@ -877,41 +923,30 @@
                 setTimeout(() => {
                     // Clear after a small delay to avoid race conditions with browser event handling
                     audioFileInput.value = '';
-                    console.log("File input cleared for future selections");
                 }, 100);
                 
                 isLoadingFile = false;
-                audioFileButton.disabled = false;
+                setFilePickerBusy(false);
                 updateButtonStates();
             }
         }
 
-        // Keep this for compatibility with other code, but it's now just a wrapper for processSelectedFile
-        async function processAudioFile(file) {
-            processSelectedFile(file);
-        }
-
-        // Original handleFileUpload function - no longer used directly, redirect to new implementation
-        async function handleFileUpload(event) {
-            // Redirect to our new implementation
-            const file = event.target.files[0];
-            if (file) {
-                processSelectedFile(file);
-            }
-        }
-
-        function analyzeAudio(buffer, targetElementId, analysisBlockTitle) { 
+        function analyzeAudio(buffer, targetElementId, analysisBlockTitle) {
             const targetElement = document.getElementById(targetElementId);
             if (!targetElement) return;
 
-            const data = buffer.getChannelData(0); 
-            let peak = 0; let sumOfSquares = 0;
-            for (let i = 0; i < data.length; i++) {
-                const absSample = Math.abs(data[i]);
-                if (absSample > peak) peak = absSample;
-                sumOfSquares += data[i] * data[i];
+            // Measure across every channel, not just the left one.
+            let peak = 0; let sumOfSquares = 0; let sampleCount = 0;
+            for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+                const data = buffer.getChannelData(ch);
+                for (let i = 0; i < data.length; i++) {
+                    const absSample = Math.abs(data[i]);
+                    if (absSample > peak) peak = absSample;
+                    sumOfSquares += data[i] * data[i];
+                }
+                sampleCount += data.length;
             }
-            const rms = Math.sqrt(sumOfSquares / data.length);
+            const rms = sampleCount > 0 ? Math.sqrt(sumOfSquares / sampleCount) : 0;
             const peakDb = peak > 0 ? 20 * Math.log10(peak) : -Infinity;
             const rmsDb = rms > 0 ? 20 * Math.log10(rms) : -Infinity;
 
@@ -944,159 +979,147 @@
         }
 
 
-        function setupMasterAudioGraph(contextToUse = audioContext) {
-            if (unifiedPlayer.source) { 
+        // Wires the full remaster chain from sourceNode and returns its last node.
+        // Shared by live playback and offline rendering so the two cannot drift.
+        function buildRemasterChain(sourceNode, fx, numberOfChannels) {
+            let node = sourceNode
+                .connect(fx.eqBass)
+                .connect(fx.eqMids)
+                .connect(fx.eqTreble)
+                .connect(fx.compressor);
+
+            // Stereo spread (Haas). Mono files bypass it entirely.
+            if (numberOfChannels >= 2) {
+                node.connect(fx.stereoSplitter);
+                fx.stereoSplitter.connect(fx.pannerL, 0);
+                fx.pannerL.connect(fx.stereoMerger, 0, 0);
+                fx.stereoSplitter.connect(fx.haasDelay, 1);
+                fx.haasDelay.connect(fx.pannerR, 0);
+                fx.pannerR.connect(fx.stereoMerger, 0, 1);
+                node = fx.stereoMerger;
+            }
+
+            // Reverb: dry path plus a two-tap feedback delay for the wet path.
+            node.connect(fx.reverbInput);
+            fx.reverbInput.connect(fx.reverbDry);
+            fx.reverbDry.connect(fx.reverbOutput);
+            fx.reverbInput.connect(fx.reverbD1);
+            fx.reverbD1.connect(fx.reverbLpf);
+            fx.reverbLpf.connect(fx.reverbD2);
+            fx.reverbD2.connect(fx.reverbFb);
+            fx.reverbFb.connect(fx.reverbD1);
+            fx.reverbD1.connect(fx.reverbWetSum);
+            fx.reverbD2.connect(fx.reverbWetSum);
+            fx.reverbWetSum.connect(fx.reverbWet);
+            fx.reverbWet.connect(fx.reverbOutput);
+            node = fx.reverbOutput;
+
+            // Warmth (saturation), wet/dry mixed.
+            node.connect(fx.warmthDry);
+            node.connect(fx.warmthInputToShaper);
+            node = fx.warmthFinalMix;
+
+            // Master Gain feeds the limiter, and the limiter is last. Anything
+            // that adds level above it (gain, reverb, saturation) is therefore
+            // caught by the ceiling instead of clipping the exported file.
+            return node.connect(fx.masterGain).connect(fx.limiter);
+        }
+
+        function setupMasterAudioGraph() {
+            if (unifiedPlayer.source) {
                 unifiedPlayer.source.onended = null;
                 try { unifiedPlayer.source.stop(); } catch (e) { /* already stopped */ }
                 unifiedPlayer.source.disconnect();
             }
+            // Detach any previously built remaster chain so its tail cannot bleed
+            // into the dry signal after an A/B switch back to Original.
+            if (liveEffects) {
+                try { liveEffects.limiter.disconnect(); } catch (e) { /* not connected */ }
+            }
 
-            unifiedPlayer.source = contextToUse.createBufferSource();
+            unifiedPlayer.source = audioContext.createBufferSource();
             unifiedPlayer.source.buffer = originalBuffer;
 
-            if (!unifiedPlayer.analyser || unifiedPlayer.analyser.context !== contextToUse) {
-                unifiedPlayer.analyser = contextToUse.createAnalyser();
+            if (!unifiedPlayer.analyser || unifiedPlayer.analyser.context !== audioContext) {
+                unifiedPlayer.analyser = audioContext.createAnalyser();
                 unifiedPlayer.analyser.fftSize = 2048;
+                unifiedPlayer.freqData = new Uint8Array(unifiedPlayer.analyser.frequencyBinCount);
             }
-            if (!unifiedPlayer.mainOutputGain || unifiedPlayer.mainOutputGain.context !== contextToUse) {
-                unifiedPlayer.mainOutputGain = contextToUse.createGain();
-                unifiedPlayer.mainOutputGain.connect(contextToUse.destination);
+            if (!unifiedPlayer.mainOutputGain || unifiedPlayer.mainOutputGain.context !== audioContext) {
+                unifiedPlayer.mainOutputGain = audioContext.createGain();
+                unifiedPlayer.mainOutputGain.connect(audioContext.destination);
             }
-            
+
             let lastNodeInChain = unifiedPlayer.source;
 
             if (unifiedPlayer.isShowingRemastered) {
-                console.log("Setting up remastered audio chain");
-                const effects = createOrGetEffectNodes(contextToUse); 
-                applyRemasterSettingsToNodes(effects, contextToUse.currentTime); 
-                
-                // Debug logs for key effect values
-                console.log("Applied effect settings:", {
-                    eqBass: parseFloat(controls.eqBass.input.value),
-                    reverbMix: parseFloat(controls.reverbMix.input.value) / 100,
-                    stereoSpread: parseFloat(controls.stereoSpread.input.value) / 100,
-                    warmth: parseFloat(controls.warmth.input.value) / 100
-                });
-                
-                lastNodeInChain = lastNodeInChain.connect(effects.eqBass)
-                    .connect(effects.eqMids)
-                    .connect(effects.eqTreble);
-                
-                lastNodeInChain = lastNodeInChain.connect(effects.compressor)
-                    .connect(effects.limiter);
-
-                // Stereo spread routing (only for stereo files; mono files bypass this)
-                if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
-                    lastNodeInChain.connect(effects.stereoSplitter);
-                    // Left channel - direct pass-through
-                    effects.stereoSplitter.connect(effects.pannerL, 0);
-                    effects.pannerL.connect(effects.stereoMerger, 0, 0);
-                    // Right channel - through Haas delay (amount controlled by slider)
-                    effects.stereoSplitter.connect(effects.haasDelay, 1);
-                    effects.haasDelay.connect(effects.pannerR, 0);
-                    effects.pannerR.connect(effects.stereoMerger, 0, 1);
-                    lastNodeInChain = effects.stereoMerger;
-                }
-                // For mono files, skip stereo processing
-                
-                // Explicit connection to reverb system - ensure complete connections
-                lastNodeInChain.connect(effects.reverbInput);
-                
-                // The following two connections ensure the signal flow is as expected
-                effects.reverbInput.connect(effects.reverbDry);
-                effects.reverbDry.connect(effects.reverbOutput);
-                
-                effects.reverbInput.connect(effects.reverbD1);
-                effects.reverbD1.connect(effects.reverbLpf);
-                effects.reverbLpf.connect(effects.reverbD2);
-                effects.reverbD2.connect(effects.reverbFb);
-                effects.reverbFb.connect(effects.reverbD1);
-                
-                effects.reverbD1.connect(effects.reverbWetSum);
-                effects.reverbD2.connect(effects.reverbWetSum);
-                effects.reverbWetSum.connect(effects.reverbWet);
-                effects.reverbWet.connect(effects.reverbOutput);
-                
-                lastNodeInChain = effects.reverbOutput;
-                
-                const warmthInputNode = lastNodeInChain; 
-                warmthInputNode.connect(effects.warmthDry); 
-                warmthInputNode.connect(effects.warmthInputToShaper); 
-                lastNodeInChain = effects.warmthFinalMix; 
-
-                lastNodeInChain = lastNodeInChain.connect(effects.masterGain);
+                const fx = getLiveEffectNodes();
+                applyRemasterSettingsToNodes(fx, audioContext.currentTime);
+                lastNodeInChain = buildRemasterChain(unifiedPlayer.source, fx, originalBuffer.numberOfChannels);
             }
+
             lastNodeInChain.connect(unifiedPlayer.analyser);
             unifiedPlayer.analyser.connect(unifiedPlayer.mainOutputGain);
             unifiedPlayer.source.onended = handleMasterPlaybackEnd;
         }
-        
-        function createOrGetEffectNodes(context) {
-            // EQ, Compressor, Limiter, MasterGain (from controls)
-            if (!eqBassNode || eqBassNode.context !== context) { 
-                eqBassNode = context.createBiquadFilter(); eqBassNode.type = 'lowshelf'; eqBassNode.frequency.value = 250;
-                eqMidsNode = context.createBiquadFilter(); eqMidsNode.type = 'peaking'; eqMidsNode.frequency.value = 1000; eqMidsNode.Q.value = 1;
-                eqTrebleNode = context.createBiquadFilter(); eqTrebleNode.type = 'highshelf'; eqTrebleNode.frequency.value = 4000;
-                compressorNode = context.createDynamicsCompressor();
-                limiterNode = context.createDynamicsCompressor();
-                masterGainNode = context.createGain(); 
-            }
+
+        // Always returns a fresh, self-contained node set bound to `context`.
+        function createEffectNodes(context) {
+            const eqBass = context.createBiquadFilter();
+            eqBass.type = 'lowshelf'; eqBass.frequency.value = 250;
+            const eqMids = context.createBiquadFilter();
+            eqMids.type = 'peaking'; eqMids.frequency.value = 1000; eqMids.Q.value = 1;
+            const eqTreble = context.createBiquadFilter();
+            eqTreble.type = 'highshelf'; eqTreble.frequency.value = 4000;
+            const compressor = context.createDynamicsCompressor();
+            const limiter = context.createDynamicsCompressor();
+            const masterGain = context.createGain();
 
             // Stereo Spread (Haas Effect)
-            if (!stereoSplitter || stereoSplitter.context !== context) {
-                stereoSplitter = context.createChannelSplitter(2);
-                stereoMerger = context.createChannelMerger(2);
-                // Use gain nodes as pass-through to preserve original stereo positions
-                pannerL = context.createGain(); 
-                pannerL.gain.value = 1.0; // Unity gain - no volume change
-                pannerR = context.createGain();
-                pannerR.gain.value = 1.0; // Unity gain - no volume change
-                haasDelay = context.createDelay(0.1); 
-                haasDelay.delayTime.value = 0; // No delay at 0% spread
-            }
-            
-            // Reverb (Simple Algorithmic)
-            if (!reverbInput || reverbInput.context !== context) {
-                reverbInput = context.createGain(); 
-                reverbDry = context.createGain();
-                reverbWet = context.createGain();
-                reverbOutput = context.createGain(); 
-                reverbWetSum = context.createGain(); 
+            const stereoSplitter = context.createChannelSplitter(2);
+            const stereoMerger = context.createChannelMerger(2);
+            // Unity-gain pass-throughs that preserve the original stereo positions.
+            const pannerL = context.createGain(); pannerL.gain.value = 1.0;
+            const pannerR = context.createGain(); pannerR.gain.value = 1.0;
+            const haasDelay = context.createDelay(0.1);
+            haasDelay.delayTime.value = 0; // No delay at 0% spread
 
-                reverbD1 = context.createDelay(0.5); reverbD1.delayTime.value = 0.047; 
-                reverbD2 = context.createDelay(0.5); reverbD2.delayTime.value = 0.073; 
-                reverbFb = context.createGain(); reverbFb.gain.value = 0.32; 
-                reverbLpf = context.createBiquadFilter(); reverbLpf.type = 'lowpass'; reverbLpf.frequency.value = 3000; 
-                
-                // We'll set up the actual connections in setupMasterAudioGraph
-            }
+            // Reverb (simple algorithmic); wiring happens in buildRemasterChain.
+            const reverbInput = context.createGain();
+            const reverbDry = context.createGain();
+            const reverbWet = context.createGain();
+            const reverbOutput = context.createGain();
+            const reverbWetSum = context.createGain();
+            const reverbD1 = context.createDelay(0.5); reverbD1.delayTime.value = 0.047;
+            const reverbD2 = context.createDelay(0.5); reverbD2.delayTime.value = 0.073;
+            const reverbFb = context.createGain(); reverbFb.gain.value = 0.32;
+            const reverbLpf = context.createBiquadFilter();
+            reverbLpf.type = 'lowpass'; reverbLpf.frequency.value = 3000;
 
-            // Warmth (Saturation)
-            if(!warmthShaper || warmthShaper.context !== context) {
-                warmthDry = context.createGain();
-                warmthInputToShaper = context.createGain(); 
-                warmthShaper = context.createWaveShaper();
-                warmthWet = context.createGain(); 
-                warmthFinalMix = context.createGain(); 
+            // Warmth (saturation)
+            const warmthDry = context.createGain();
+            const warmthInputToShaper = context.createGain();
+            const warmthShaper = context.createWaveShaper();
+            const warmthWet = context.createGain();
+            const warmthFinalMix = context.createGain();
+            warmthInputToShaper.connect(warmthShaper).connect(warmthWet).connect(warmthFinalMix);
+            warmthDry.connect(warmthFinalMix);
 
-                warmthInputToShaper.connect(warmthShaper).connect(warmthWet).connect(warmthFinalMix);
-                warmthDry.connect(warmthFinalMix);
-            }
-
-            return { 
-                eqBass: eqBassNode, eqMids: eqMidsNode, eqTreble: eqTrebleNode, 
-                compressor: compressorNode, limiter: limiterNode, masterGain: masterGainNode,
-                stereoSplitter: stereoSplitter, stereoMerger: stereoMerger,
-                haasDelay: haasDelay, pannerL: pannerL, pannerR: pannerR,
-                reverbInput: reverbInput, reverbDry: reverbDry, reverbWet: reverbWet, reverbOutput: reverbOutput,
-                reverbD1: reverbD1, reverbD2: reverbD2, reverbFb: reverbFb, reverbLpf: reverbLpf, reverbWetSum: reverbWetSum,
-                warmthDry: warmthDry, warmthInputToShaper: warmthInputToShaper, 
-                warmthShaper: warmthShaper, warmthWet: warmthWet, warmthFinalMix: warmthFinalMix
+            return {
+                eqBass, eqMids, eqTreble, compressor, limiter, masterGain,
+                stereoSplitter, stereoMerger, haasDelay, pannerL, pannerR,
+                reverbInput, reverbDry, reverbWet, reverbOutput,
+                reverbD1, reverbD2, reverbFb, reverbLpf, reverbWetSum,
+                warmthDry, warmthInputToShaper, warmthShaper, warmthWet, warmthFinalMix
             };
         }
 
-
-        function getLiveEffectNodes() { return createOrGetEffectNodes(audioContext); }
+        function getLiveEffectNodes() {
+            if (!liveEffects || liveEffects.eqBass.context !== audioContext) {
+                liveEffects = createEffectNodes(audioContext);
+            }
+            return liveEffects;
+        }
 
         function applyRemasterSettingsToNodes(nodes, time = audioContext.currentTime) {
             if (!nodes || !nodes.eqBass) { return; } 
@@ -1125,9 +1148,7 @@
             }
 
             // Reverb Mix - Value 0-30% (slider max is 30)
-            const reverbMixVal = parseFloat(controls.reverbMix.input.value) / 100; 
-            console.log(`Applying reverb mix: ${reverbMixVal} (from slider value: ${controls.reverbMix.input.value})`);
-            
+            const reverbMixVal = parseFloat(controls.reverbMix.input.value) / 100;
             if (nodes.reverbDry && nodes.reverbWet) {
                 nodes.reverbDry.gain.setValueAtTime(1 - reverbMixVal, time);
                 nodes.reverbWet.gain.setValueAtTime(reverbMixVal, time);
@@ -1147,22 +1168,6 @@
                 nodes.warmthInputToShaper.gain.setValueAtTime(1.0, time); 
                 nodes.warmthWet.gain.setValueAtTime(wetGainValue, time);
             }
-            
-            // Log applied settings for debugging
-            if (time === 0 || Math.random() < 0.1) { // Log at start or occasionally (10% of the time)
-                console.log("Applied effect settings:", {
-                    eqBass: eqBassVal + "dB",
-                    eqMids: eqMidsVal + "dB", 
-                    eqTreble: eqTrebleVal + "dB",
-                    compThreshold: parseFloat(controls.compressorThreshold.input.value) + "dB",
-                    compRatio: parseFloat(controls.compressorRatio.input.value) + ":1",
-                    limiterThreshold: parseFloat(controls.limiterThreshold.input.value) + "dB",
-                    masterGain: gainValueDb + "dB",
-                    stereoSpread: spreadPercent + "%",
-                    reverbMix: (reverbMixVal * 100).toFixed(1) + "%",
-                    warmth: warmthPercent + "%"
-                });
-            }
         }
         
         function makeDistortionCurve(amount) {
@@ -1176,81 +1181,76 @@
             return curve;
         }
 
-        async function handleEvaluateRemaster() {
-            if (!originalBuffer) {
-                return;
-            }
-            evaluateRemasterBtn.disabled = true;
-            remasteredAnalysisDisplayWrapper.classList.add('hidden'); 
-            remasteredAnalysisDisplayWrapper.innerHTML = '';
-
+        // Renders the current settings offline. Used by both Evaluate and
+        // Download so the reported metrics describe the file you actually get.
+        async function renderRemasterOffline() {
+            const reverbMix = parseFloat(controls.reverbMix.input.value);
+            // Give the reverb somewhere to decay instead of cutting it dead.
+            const tailFrames = reverbMix > 0 ? Math.ceil(originalBuffer.sampleRate * 2) : 0;
 
             const offlineCtx = new OfflineAudioContext(
                 originalBuffer.numberOfChannels,
-                originalBuffer.length,
+                originalBuffer.length + tailFrames,
                 originalBuffer.sampleRate
             );
             const offlineSource = offlineCtx.createBufferSource();
             offlineSource.buffer = originalBuffer;
-            const offlineEffects = createOrGetEffectNodes(offlineCtx);
-            applyRemasterSettingsToNodes(offlineEffects, 0); 
 
-            let lastOfflineNode = offlineSource;
-            lastOfflineNode = lastOfflineNode.connect(offlineEffects.eqBass)
-                .connect(offlineEffects.eqMids)
-                .connect(offlineEffects.eqTreble);
-            lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
-                .connect(offlineEffects.limiter);
-            // Stereo spread routing (only for stereo files)
-            if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
-                lastOfflineNode.connect(offlineEffects.stereoSplitter);
-                offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0);
-                offlineEffects.pannerL.connect(offlineEffects.stereoMerger, 0, 0);
-                offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1);
-                offlineEffects.haasDelay.connect(offlineEffects.pannerR, 0);
-                offlineEffects.pannerR.connect(offlineEffects.stereoMerger, 0, 1);
-                lastOfflineNode = offlineEffects.stereoMerger;
-            }
-            // For mono files, skip stereo processing
-            
-            // Set up reverb internal connections for offline context
-            lastOfflineNode.connect(offlineEffects.reverbInput);
-            offlineEffects.reverbInput.connect(offlineEffects.reverbDry);
-            offlineEffects.reverbDry.connect(offlineEffects.reverbOutput);
-            
-            offlineEffects.reverbInput.connect(offlineEffects.reverbD1);
-            offlineEffects.reverbD1.connect(offlineEffects.reverbLpf);
-            offlineEffects.reverbLpf.connect(offlineEffects.reverbD2);
-            offlineEffects.reverbD2.connect(offlineEffects.reverbFb);
-            offlineEffects.reverbFb.connect(offlineEffects.reverbD1);
-            
-            offlineEffects.reverbD1.connect(offlineEffects.reverbWetSum);
-            offlineEffects.reverbD2.connect(offlineEffects.reverbWetSum);
-            offlineEffects.reverbWetSum.connect(offlineEffects.reverbWet);
-            offlineEffects.reverbWet.connect(offlineEffects.reverbOutput);
-            
-            lastOfflineNode = offlineEffects.reverbOutput;
-            const warmthInputSplitterOffline = lastOfflineNode;
-            warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);
-            warmthInputSplitterOffline.connect(offlineEffects.warmthDry);
-            lastOfflineNode = offlineEffects.warmthFinalMix;
-            lastOfflineNode.connect(offlineEffects.masterGain).connect(offlineCtx.destination);
-            
+            const fx = createEffectNodes(offlineCtx);
+            applyRemasterSettingsToNodes(fx, 0);
+            buildRemasterChain(offlineSource, fx, originalBuffer.numberOfChannels)
+                .connect(offlineCtx.destination);
+
             offlineSource.start(0);
+            const rendered = await offlineCtx.startRendering();
+            applyTruePeakCeiling(rendered, parseFloat(controls.limiterThreshold.input.value));
+            return rendered;
+        }
+
+        // DynamicsCompressorNode has no lookahead, so fast transients can punch
+        // a couple of dB past the limiter threshold. Catch the overshoot on the
+        // rendered buffer so the exported file can never clip, and so Evaluate
+        // reports the levels the file actually has.
+        function applyTruePeakCeiling(buffer, thresholdDb) {
+            const ceiling = Math.pow(10, thresholdDb / 20);
+            let peak = 0;
+            for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+                const data = buffer.getChannelData(ch);
+                for (let i = 0; i < data.length; i++) {
+                    const abs = Math.abs(data[i]);
+                    if (abs > peak) peak = abs;
+                }
+            }
+            if (peak <= ceiling || peak === 0) return;
+
+            const correction = ceiling / peak;
+            for (let ch = 0; ch < buffer.numberOfChannels; ch++) {
+                const data = buffer.getChannelData(ch);
+                for (let i = 0; i < data.length; i++) data[i] *= correction;
+            }
+        }
+
+        async function handleEvaluateRemaster() {
+            if (!originalBuffer) return;
+
+            evaluateRemasterBtn.disabled = true;
+            remasteredAnalysisDisplayWrapper.classList.add('hidden');
+            remasteredAnalysisDisplayWrapper.innerHTML = '';
 
             try {
-                const renderedBuffer = await offlineCtx.startRendering();
-                analyzeAudio(renderedBuffer, "remasteredAnalysisDisplayWrapper", "Remastered Audio Metrics"); 
+                const renderedBuffer = await renderRemasterOffline();
+                analyzeAudio(renderedBuffer, "remasteredAnalysisDisplayWrapper", "Remastered Audio Metrics");
             } catch (e) {
                 console.error("Error evaluating remastered audio:", e);
+                trackGAEvent('evaluate', { operation: 'error', error_message: e.message });
             } finally {
                 evaluateRemasterBtn.disabled = false;
+                updateButtonStates();
             }
         }
 
 
         function handleABToggleChange() { 
-            console.log(`A/B Toggle changed to: ${unifiedPlayer.abToggle.checked ? 'REMASTERED' : 'ORIGINAL'}`);
             unifiedPlayer.isShowingRemastered = unifiedPlayer.abToggle.checked;
             updateABToggleVisuals();
             if (unifiedPlayer.isPlaying) { 
@@ -1296,8 +1296,11 @@
                 if (unifiedPlayer.fftCanvasCtx) drawPlaceholderSpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas);
             }
         }
-        function toggleMasterPlayback() { 
+        function toggleMasterPlayback() {
             if (!originalBuffer) return;
+            if (audioContext.state === 'suspended') {
+                audioContext.resume().catch(err => console.error("Could not resume AudioContext:", err));
+            }
             if (unifiedPlayer.isPlaying) {
                 unifiedPlayer.pauseOffset += (audioContext.currentTime - unifiedPlayer.startTime);
                 stopMasterPlayback(true); 
@@ -1344,10 +1347,11 @@
             if(unifiedPlayer.timeDisplay) unifiedPlayer.timeDisplay.textContent = `${formatTime(elapsedTime)} / ${formatTime(duration)}`;
 
             if (unifiedPlayer.analyser && unifiedPlayer.fftCanvasCtx) {
-                const bufferLength = unifiedPlayer.analyser.frequencyBinCount;
-                const dataArray = new Uint8Array(bufferLength);
-                unifiedPlayer.analyser.getByteFrequencyData(dataArray);
-                drawFrequencySpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas, dataArray);
+                if (!unifiedPlayer.freqData || unifiedPlayer.freqData.length !== unifiedPlayer.analyser.frequencyBinCount) {
+                    unifiedPlayer.freqData = new Uint8Array(unifiedPlayer.analyser.frequencyBinCount);
+                }
+                unifiedPlayer.analyser.getByteFrequencyData(unifiedPlayer.freqData);
+                drawFrequencySpectrum(unifiedPlayer.fftCanvasCtx, unifiedPlayer.fftCanvas, unifiedPlayer.freqData);
             }
 
             unifiedPlayer.animationFrameId = requestAnimationFrame(updateMasterProgress);
@@ -1373,143 +1377,91 @@
                 startMasterPlayback(); 
             }
         }
-        function drawFrequencySpectrum(ctx, canvas, dataArray) { 
+        function drawFrequencySpectrum(ctx, canvas, dataArray) {
             if (!ctx || !canvas || !dataArray) return;
-            const barWidth = (canvas.width / dataArray.length) * 2.5; 
-            let barHeight;
-            let x = 0;
+            const dpr = unifiedPlayer.dpr || 1;
 
-            ctx.fillStyle = '#1a1a1a'; 
+            ctx.fillStyle = '#1a1a1a';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
+
             const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            gradient.addColorStop(0, '#f0a500'); 
-            gradient.addColorStop(0.7, '#d08c00'); 
-            gradient.addColorStop(1, '#a06800');   
+            gradient.addColorStop(0, '#f0a500');
+            gradient.addColorStop(0.7, '#d08c00');
+            gradient.addColorStop(1, '#a06800');
             ctx.fillStyle = gradient;
 
-            for (let i = 0; i < dataArray.length; i++) {
-                barHeight = (dataArray[i] / 255) * canvas.height; 
-                ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
-                x += barWidth + 1; 
+            // Fold every bin into the bars that actually fit on the canvas, so
+            // the whole spectrum is visible rather than the first third of it.
+            const gap = Math.max(1, Math.round(dpr));
+            const barWidth = Math.max(3 * dpr, 3);
+            const barCount = Math.max(1, Math.floor(canvas.width / (barWidth + gap)));
+            const binsPerBar = dataArray.length / barCount;
+
+            for (let bar = 0; bar < barCount; bar++) {
+                const start = Math.floor(bar * binsPerBar);
+                const end = Math.max(start + 1, Math.floor((bar + 1) * binsPerBar));
+                let binPeak = 0;
+                for (let i = start; i < end && i < dataArray.length; i++) {
+                    if (dataArray[i] > binPeak) binPeak = dataArray[i];
+                }
+                const barHeight = (binPeak / 255) * canvas.height;
+                ctx.fillRect(bar * (barWidth + gap), canvas.height - barHeight, barWidth, barHeight);
             }
         }
-        async function renderAndDownload() { 
-            if (!originalBuffer) {
-                return;
-            }
-            if(unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = true; 
-            downloadBtn.disabled = true; downloadBtn.classList.add('btn-disabled');
-            
+        function remasteredFileName() {
+            const base = (sourceFileName || 'audio')
+                .replace(/\.[^.]+$/, '')
+                .replace(/[^\w\-. ()]+/g, '_')
+                .trim()
+                .slice(0, 80);
+            return `${base || 'audio'}_remastered.wav`;
+        }
+
+        async function renderAndDownload() {
+            if (!originalBuffer) return;
+
+            if (unifiedPlayer.playPauseBtn) unifiedPlayer.playPauseBtn.disabled = true;
+            downloadBtn.disabled = true;
+            downloadBtn.classList.add('btn-disabled');
+
             trackGAEvent('download', {
                 operation: 'started',
                 original_duration: originalBuffer.duration.toFixed(1),
                 sample_rate: originalBuffer.sampleRate
             });
-            
-            console.log("Starting offline render...");
 
-            const offlineCtx = new OfflineAudioContext(
-                originalBuffer.numberOfChannels,
-                originalBuffer.length,
-                originalBuffer.sampleRate
-            );
-
-            const offlineSource = offlineCtx.createBufferSource();
-            offlineSource.buffer = originalBuffer;
-
-            const offlineEffects = createOrGetEffectNodes(offlineCtx); 
-            applyRemasterSettingsToNodes(offlineEffects, 0); 
-
-            let lastOfflineNode = offlineSource;
-
-            lastOfflineNode = lastOfflineNode.connect(offlineEffects.eqBass)
-                .connect(offlineEffects.eqMids)
-                .connect(offlineEffects.eqTreble);
-            lastOfflineNode = lastOfflineNode.connect(offlineEffects.compressor)
-                .connect(offlineEffects.limiter);
-            // Stereo spread routing (only for stereo files)
-            if (originalBuffer && originalBuffer.numberOfChannels >= 2) {
-                lastOfflineNode.connect(offlineEffects.stereoSplitter);
-                offlineEffects.stereoSplitter.connect(offlineEffects.pannerL, 0);
-                offlineEffects.pannerL.connect(offlineEffects.stereoMerger, 0, 0);
-                offlineEffects.stereoSplitter.connect(offlineEffects.haasDelay, 1);
-                offlineEffects.haasDelay.connect(offlineEffects.pannerR, 0);
-                offlineEffects.pannerR.connect(offlineEffects.stereoMerger, 0, 1);
-                lastOfflineNode = offlineEffects.stereoMerger;
-            }
-            // For mono files, skip stereo processing
-            
-            // Set up reverb internal connections for offline context
-            lastOfflineNode.connect(offlineEffects.reverbInput);
-            offlineEffects.reverbInput.connect(offlineEffects.reverbDry);
-            offlineEffects.reverbDry.connect(offlineEffects.reverbOutput);
-            
-            offlineEffects.reverbInput.connect(offlineEffects.reverbD1);
-            offlineEffects.reverbD1.connect(offlineEffects.reverbLpf);
-            offlineEffects.reverbLpf.connect(offlineEffects.reverbD2);
-            offlineEffects.reverbD2.connect(offlineEffects.reverbFb);
-            offlineEffects.reverbFb.connect(offlineEffects.reverbD1);
-            
-            offlineEffects.reverbD1.connect(offlineEffects.reverbWetSum);
-            offlineEffects.reverbD2.connect(offlineEffects.reverbWetSum);
-            offlineEffects.reverbWetSum.connect(offlineEffects.reverbWet);
-            offlineEffects.reverbWet.connect(offlineEffects.reverbOutput);
-            
-            lastOfflineNode = offlineEffects.reverbOutput;
-            const warmthInputSplitterOffline = lastOfflineNode;
-            warmthInputSplitterOffline.connect(offlineEffects.warmthInputToShaper);
-            warmthInputSplitterOffline.connect(offlineEffects.warmthDry);
-            lastOfflineNode = offlineEffects.warmthFinalMix;
-            lastOfflineNode.connect(offlineEffects.masterGain)
-                .connect(offlineCtx.destination);
-            
-            offlineSource.start(0);
-
+            let url = null;
+            let anchor = null;
             try {
-                const renderedBuffer = await offlineCtx.startRendering();
-                console.log("Offline rendering complete. Buffer length:", renderedBuffer.length, "Sample rate:", renderedBuffer.sampleRate);
-                
-                const wavBlob = bufferToWave(renderedBuffer); 
-                console.log("WAV Blob created. Size:", wavBlob.size, "Type:", wavBlob.type);
+                const renderedBuffer = await renderRemasterOffline();
+                const wavBlob = bufferToWave(renderedBuffer);
+                if (wavBlob.size === 0) throw new Error("Generated WAV blob is empty");
 
-                if (wavBlob.size === 0) {
-                    console.error("Generated WAV blob is empty. Download aborted.");
-                    return;
-                }
-                
-                const url = URL.createObjectURL(wavBlob);
-                console.log("Blob URL created:", url);
-                
-                const a = document.createElement('a');
-                a.style.display = 'none'; a.href = url; a.download = 'remastered_audio.wav';
-                document.body.appendChild(a);
-                console.log("Download link created and appended to body.");
-                
-                a.click();
-                console.log("Download link clicked.");
-                
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                    console.log("Blob URL revoked and link removed.");
-                }, 100);
-                
+                url = URL.createObjectURL(wavBlob);
+                anchor = document.createElement('a');
+                anchor.style.display = 'none';
+                anchor.href = url;
+                anchor.download = remasteredFileName();
+                document.body.appendChild(anchor);
+                anchor.click();
+
                 trackGAEvent('download', {
                     operation: 'completed',
                     file_size_kb: Math.round(wavBlob.size / 1024),
                     processing_success: true
                 });
-                
             } catch (e) {
                 console.error("Error rendering or downloading audio:", e);
-                
-                trackGAEvent('download', {
-                    operation: 'error',
-                    error_message: e.message
-                });
+                trackGAEvent('download', { operation: 'error', error_message: e.message });
             } finally {
-                updateButtonStates(); 
+                // Revoke on a delay so the browser has started the download.
+                if (url || anchor) {
+                    setTimeout(() => {
+                        if (url) URL.revokeObjectURL(url);
+                        if (anchor && anchor.parentNode) anchor.remove();
+                    }, 1000);
+                }
+                updateButtonStates();
             }
         }
         function bufferToWave(abuffer) { 
@@ -1552,11 +1504,8 @@
                 const control = controls[controlKey];
                 if (control.input) {
                     control.input.addEventListener('input', () => {
-                        // Update UI immediately as usual
-                        if (control.display) {
-                            control.display.textContent = control.input.value;
-                        }
-                        
+                        // Display updates live in setupEventListeners; this
+                        // listener only handles debounced analytics.
                         // Clear any existing timer for this control
                         if (sliderDebounceTimers[controlKey]) {
                             clearTimeout(sliderDebounceTimers[controlKey]);
@@ -1594,7 +1543,6 @@
         function trackGAEvent(eventName, eventParams) {
             if (typeof gtag === 'function') {
                 gtag('event', eventName, eventParams);
-                console.log('GA Event:', eventName, eventParams); // For debugging
             } else {
                 console.warn('gtag function not found. GA event not tracked.');
             }

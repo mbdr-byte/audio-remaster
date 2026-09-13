@@ -28,9 +28,19 @@ I created this tool to enable quick and simple remastering of music tracks creat
 
 ## 🔒 Privacy
 
-**All processing is done entirely client-side in your browser.** 
+**All processing is done entirely client-side in your browser.**
 
-Your audio files are never uploaded to any servers, ensuring complete privacy and data security. You can verify this by examining the source code in this repository.
+Your audio never leaves your device. Files are decoded with the Web Audio API,
+processed in memory, and exported straight from the browser — there is no
+server, no upload, and no storage. You can verify this by examining
+[`index.html`](index.html): the page makes no network request that carries audio
+data, and the only outbound requests it makes at all are for Google Fonts and
+Google Analytics.
+
+For transparency: the site does use Google Analytics for anonymous usage stats
+(page views, which buttons and sliders get used, file type, file size and
+duration). It deliberately does **not** send your file names or any audio
+content.
 
 ## 🛠️ Development
 
